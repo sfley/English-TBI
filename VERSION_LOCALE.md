@@ -4,6 +4,28 @@ Cette version réunit les sept activités et un atelier visuel de création de t
 Aucun Git, Flask, compte ou jeton n'est nécessaire sur votre ordinateur.
 Le site déjà publié sur La Forge reste utilisable indépendamment.
 
+## Navigation — version locale 1.4
+
+La barre commune **Préparer · Jouer · Imprimer** garde le thème choisi et indique
+le nombre de cartes de la séance. **Préparer** regroupe deux rubriques : thèmes/cartes
+et séance/ressources. Le dernier thème est conservé dans l’onglet du navigateur ;
+les sélections de cartes restent sauvegardées sur disque. Si le stockage du navigateur
+est bloqué, les liens continuent à transporter explicitement le thème choisi.
+
+Dans **Jouer**, la colonne latérale est remplacée par une barre compacte.
+Le nom de l’activité ouvre la liste des sept jeux. **Réglages** regroupe les options
+de l’activité, le mode TBI et le contraste élevé. Les boutons de lecture utiles
+et **Recommencer** restent sous les cartes. Les cartes s’adaptent à l’espace disponible ;
+le choix manuel du nombre de colonnes reste accessible dans les réglages.
+En plein écran, la navigation se replie ; le bouton **Menu** permet de la retrouver.
+Une modification non enregistrée dans l’éditeur déclenche une confirmation avant
+le changement de module.
+
+La nouvelle suite `tests/navigation-browser.cjs` vérifie le cycle complet entre les
+modules, la sélection conservée, les sept activités, le redémarrage, les réglages,
+le plein écran et la protection des modifications non enregistrées. Exécutez-la
+sur des données de test fraîches : les autres suites peuvent renommer un thème.
+
 ## Premier démarrage
 
 1. Téléchargez le ZIP de la version locale, puis faites clic droit > **Extraire tout**.

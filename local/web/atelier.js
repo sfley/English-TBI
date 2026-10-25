@@ -68,7 +68,7 @@ async function loadCatalog(){
  for(const theme of result.themes){
   const item=document.createElement('div');item.className='theme-item';const title=document.createElement('strong');title.textContent=theme.name;
   const count=document.createElement('small');count.textContent=`${theme.count} cartes`;
-  const edit=document.createElement('button');edit.textContent='Modifier';edit.onclick=()=>operation(async()=>{
+  const edit=document.createElement('button');edit.textContent='Modifier';edit.dataset.editTheme=theme.id;edit.onclick=()=>operation(async()=>{
    if(model.dirty&&!confirm('Abandonner les modifications non enregistrées ?'))return;
    const data=await request('/api/themes/'+theme.id);model.id=data.id;model.cards=data.cards.map(c=>({label:c.label,image:c.image,audio:c.audio,audioLabel:c.label}));model.dirty=false;$('theme-name').value=data.name;$('credit').value=data.credit||'';$('editor-title').textContent='Modifier un thème';$('saved-state').textContent='Enregistré sur cet ordinateur';setPlayLink(data);render();message('Thème chargé.');
   });
@@ -76,8 +76,9 @@ async function loadCatalog(){
  }
  if(!result.themes.length)$('themes').textContent='Vos nouveaux thèmes apparaîtront ici. Les fruits et les animaux sont déjà disponibles dans les jeux.';
  message(result.warnings.join('\n'),!!result.warnings.length,'library-message');
+ if(!model.id&&!model.dirty){let requested=new URLSearchParams(location.search).get('theme');try{requested=requested||sessionStorage.getItem('active-theme');}catch{}const button=[...document.querySelectorAll('[data-edit-theme]')].find(e=>e.dataset.editTheme===requested);if(button)setTimeout(()=>button.click(),0);}
 }
-function setPlayLink(theme){$('play-theme').href='/app/?theme='+encodeURIComponent(theme.key);$('play-theme').hidden=false;}
+function setPlayLink(theme){window.dispatchEvent(new CustomEvent('themechange',{detail:theme}));$('play-theme').href='/app/?theme='+encodeURIComponent(theme.key);$('play-theme').hidden=false;}
 async function save(){
  for(const c of model.cards)if(c.audioLabel!==c.label.trim())c.audio=null;
  const result=await request('/api/save',{id:model.id,name:$('theme-name').value,credit:$('credit').value,cards:model.cards.map(c=>({...c,label:c.label.trim()}))});

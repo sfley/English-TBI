@@ -466,13 +466,13 @@ class Handler(BaseHTTPRequestHandler):
                 resolved = file.relative_to(ROOT).as_posix()
                 if not (resolved in ['index.html','styles.css','cards.js'] or any(file.is_relative_to(ROOT/d) for d in ['js','audio','flashcards'])):
                     raise ValueError('Chemin interdit.')
-            elif path in ['/atelier.js','/atelier.css','/print.html','/print.js','/print.css','/session.html','/session.js','/common.css']:
+            elif path in ['/atelier.js','/atelier.css','/print.html','/print.js','/print.css','/session.html','/session.js','/common.css','/navigation.js']:
                 file=ROOT/'local/web'/path[1:]
             elif path=='/favicon.ico': return self.send(b'',status=204)
             else: return self.send({'error':'Page introuvable.'},status=404)
             data=file.read_bytes()
             if file.suffix == '.html':
-                data=data.replace(b'</head>',b'<link rel="stylesheet" href="/common.css"></head>')
+                data=data.replace(b'</head>',b'<link rel="stylesheet" href="/common.css"><script src="/navigation.js" defer></script></head>')
             if path in ['/app/','/app/index.html']:
                 data=data.replace(b'<body>',b'<body class="local-app">')
                 data=data.replace(b'</header>', b'<p><a href="/" style="color:inherit">Atelier de th\xc3\xa8mes</a></p></header>',1)

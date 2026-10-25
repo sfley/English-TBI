@@ -150,6 +150,7 @@
     const game = window.GAME_REGISTRY[state.currentGameId];
     wrap.innerHTML = '';
     game.mountControls(wrap, state, state.setState, render);
+    window.dispatchEvent(new Event('localcontrols'));
   }
 
   function renderDisplayControls() {
@@ -191,6 +192,7 @@
     const game = window.GAME_REGISTRY[state.currentGameId];
     game.render(document.getElementById('stage'), state);
 
+    window.dispatchEvent(new Event('localrender'));
     // Sync active state
     document.querySelectorAll('#gameList button').forEach(b => {
       const isActive = b.textContent === (GAME_UI[state.currentGameId]?.name || game.name || state.currentGameId);
@@ -223,6 +225,7 @@
     renderDisplayControls();
     render();
     wireGlobals();
+    window.addEventListener('restartgame', () => { destroyCurrentGame(); mountControls(); render(); });
   }
 
   document.addEventListener('DOMContentLoaded', init);
