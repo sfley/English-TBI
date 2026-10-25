@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>English TBI · Atelier local</title><link rel="stylesheet" href="atelier.css"></head>
+<body>
+<header class="top"><div><span class="eyebrow">ENGLISH TBI · SUR CET ORDINATEUR</span><h1>Votre atelier de thèmes</h1><p>Des images, des mots, des voix. Puis place aux jeux.</p></div><a class="button primary" href="/app/">Ouvrir les 7 activités →</a></header>
+<main>
+<section class="library"><div class="section-title"><h2>Mes thèmes</h2><button id="new-theme">Nouveau thème</button></div><p>Les thèmes sont conservés dans le dossier <strong>donnees_locales</strong>, à côté du lanceur. Exportez-les pour les transporter ou les sauvegarder.</p><div id="themes" class="theme-list"></div><label class="button import">Importer un thème ZIP <input id="import-theme" type="file" accept=".zip" hidden></label><p id="library-message" role="status"></p></section>
+<section class="editor"><div class="section-title"><h2 id="editor-title">Créer un thème</h2><span id="saved-state">Non enregistré</span></div>
+<p class="hint">Les mots envoyés au service gTTS servent à produire les voix. Internet est nécessaire uniquement pour cette génération et la première installation. Aucun jeton n’est requis.</p>
+<fieldset id="editor-fields"><legend class="sr-only">Contenu du thème</legend>
+<div class="metadata"><label>Nom du thème<input id="theme-name" maxlength="80" placeholder="School supplies"></label><label>Voix pour les prochains sons<select id="accent"><option value="co.uk">Anglais britannique</option><option value="com">Anglais américain</option></select></label></div>
+<label>Sources et droits des images / des sons<textarea id="credit" rows="2" maxlength="2000" placeholder="Vos créations, sources, licences…"></textarea></label>
+<div id="drop-zone" class="drop-zone"><strong>Déposez vos images ici</strong><span>ou choisissez plusieurs fichiers · PNG, JPEG, WebP · 8 Mo maximum par fichier</span><label class="button">Choisir des images<input id="add-images" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden></label></div>
+<div class="section-title"><h3 id="card-count">Aucune carte</h3><button id="generate-all" type="button">Générer les sons manquants</button></div>
+<div id="cards" class="cards"></div>
+<div class="actions"><button id="save" class="primary">Enregistrer le thème</button><button id="export">Exporter en ZIP</button><a id="play-theme" class="button" href="/app/" hidden>Jouer avec ce thème →</a></div>
+</fieldset><p id="message" role="status" aria-live="polite"></p>
+<p class="hint">Prévoyez au moins 2 cartes avec une image et un son chacune. Les fichiers audio importés doivent être des MP3. Les modifications ne sont conservées qu’après « Enregistrer le thème ».</p>
+</section>
+</main><footer>Version locale 1 · Aucun compte élève · Aucun envoi automatique vers GitHub ou La Forge</footer>
+<script src="atelier.js"></script>
+</body></html>

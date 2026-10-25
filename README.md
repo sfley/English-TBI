@@ -1,3 +1,9 @@
+# Version locale Windows
+
+Commencez par [VERSION_LOCALE.md](VERSION_LOCALE.md), puis double-cliquez sur **DEMARRER.bat** dans le dossier extrait. Cette branche contient l’atelier local et les sept activités.
+
+---
+
 # Anglais sur TBI
 
 Application statique HTML/CSS/JavaScript, avec sept activités : Visual Board, Listen,

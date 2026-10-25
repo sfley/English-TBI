@@ -22,7 +22,9 @@
 
   const state = {
     currentGameId: bootGame,
-    setKey: (window.DEFAULT_CONFIG && window.DEFAULT_CONFIG.set) || Object.keys(window.CARD_SETS)[0],
+    setKey: Object.hasOwn(window.CARD_SETS, new URLSearchParams(location.search).get('theme'))
+      ? new URLSearchParams(location.search).get('theme')
+      : (window.DEFAULT_CONFIG && window.DEFAULT_CONFIG.set) || Object.keys(window.CARD_SETS)[0],
     cards: [], index: 0,
     showLabel: window.DEFAULT_CONFIG?.showLabel ?? false,
     sound: window.DEFAULT_CONFIG?.sound ?? false,

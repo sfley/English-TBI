@@ -1,3 +1,7 @@
 node_modules/
 public/
 test-results/
+.venv/
+donnees_locales/
+__pycache__/
+*.pyc
