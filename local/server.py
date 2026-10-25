@@ -14,6 +14,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, unquote
 import uuid
+import unicodedata
 import webbrowser
 import zipfile
 
@@ -26,6 +27,9 @@ ROOT = Path(__file__).resolve().parent.parent
 MAX_BODY = 64 * 1024 * 1024
 MAX_ZIP = 50 * 1024 * 1024
 MAX_ASSET = 8 * 1024 * 1024
+IMAGE_SIZE = 187
+LAYOUT_BEGIN = '// BEGIN ENGLISH TBI LOCAL THEMES'
+LAYOUT_END = '// END ENGLISH TBI LOCAL THEMES'
 ID = re.compile(r'^[a-f0-9]{32}$')
 Image.MAX_IMAGE_PIXELS = 20_000_000
 
@@ -55,10 +59,10 @@ def image_png(data):
                 raise ValueError('Image trop grande.')
             source.load()
             picture = ImageOps.exif_transpose(source).convert('RGBA')
-            size = calc_size_contain(picture.width, picture.height, 512, 512)
+            size = calc_size_contain(picture.width, picture.height, IMAGE_SIZE, IMAGE_SIZE)
             picture = picture.resize(size, Image.Resampling.LANCZOS)
-            result = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
-            result.alpha_composite(picture, ((512-picture.width)//2, (512-picture.height)//2))
+            result = Image.new('RGBA', (IMAGE_SIZE, IMAGE_SIZE), (0, 0, 0, 0))
+            result.alpha_composite(picture, ((IMAGE_SIZE-picture.width)//2, (IMAGE_SIZE-picture.height)//2))
             output = io.BytesIO()
             result.save(output, 'PNG')
             return output.getvalue()
@@ -145,14 +149,67 @@ def read_pack(data):
         raise ValueError('Archive de thème invalide ou incomplète.') from exc
 
 
+def slug(value):
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode().lower()
+    result = re.sub(r'[^a-z0-9]+', '-', value).strip('-')[:60] or 'theme'
+    if result in {'con','prn','aux','nul'} or re.fullmatch(r'(com|lpt)[0-9]', result):
+        result = 'theme-' + result
+    return result
+
+
+def repack(manifest, data):
+    output = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(data)) as source:
+        with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as dest:
+            for name in source.namelist():
+                dest.writestr(name, json.dumps(manifest, ensure_ascii=False) if name == 'manifest.json' else source.read(name))
+    return output.getvalue()
+
+
+def atomic_files(updates):
+    # Stage all files before modifying any target, and roll back a partial write.
+    staged, originals = {}, {}
+    try:
+        for path, data in updates.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            originals[path] = path.read_bytes() if path.exists() else None
+            fd, name = tempfile.mkstemp(dir=path.parent, suffix='.tmp')
+            with os.fdopen(fd, 'wb') as stream:
+                stream.write(data)
+            staged[path] = Path(name)
+        changed = []
+        try:
+            for path, temp in staged.items():
+                os.replace(temp, path)
+                changed.append(path)
+        except OSError:
+            for path in reversed(changed):
+                if originals[path] is None:
+                    path.unlink(missing_ok=True)
+                else:
+                    path.write_bytes(originals[path])
+            raise
+    finally:
+        for temp in staged.values():
+            temp.unlink(missing_ok=True)
+
+
 class WorkshopServer(ThreadingHTTPServer):
     daemon_threads = True
     def __init__(self, port=0, data_dir=None):
         self.data_dir = Path(data_dir or ROOT/'donnees_locales')
         self.data_dir.mkdir(parents=True, exist_ok=True)
+        # Tests/CLI --data-dir use an isolated site so they never modify the checkout.
+        self.project_dir = self.data_dir/'site' if data_dir else ROOT
+        self.project_dir.mkdir(parents=True, exist_ok=True)
+        self.cards_file = self.project_dir/'cards.js'
+        if not self.cards_file.exists():
+            self.cards_file.write_bytes((ROOT/'cards.js').read_bytes())
         self.token = secrets.token_urlsafe(32)
         self.write_lock = threading.Lock()
         self.tts_lock = threading.Lock()
+        self.migration_warnings = []
+        self.migrate_themes()
         super().__init__(('127.0.0.1', port), Handler)
 
     def path_for(self, tid):
@@ -160,25 +217,111 @@ class WorkshopServer(ThreadingHTTPServer):
             raise ValueError('Identifiant invalide.')
         return self.data_dir / (tid+'.zip')
 
-    def store(self, manifest, data):
-        target = self.path_for(manifest['id'])
-        with self.write_lock:
-            fd, temp = tempfile.mkstemp(dir=self.data_dir, suffix='.tmp')
-            try:
-                with os.fdopen(fd, 'wb') as stream:
-                    stream.write(data)
-                os.replace(temp, target)
-            finally:
-                if os.path.exists(temp): os.unlink(temp)
-
-    def catalog(self):
-        themes, warnings = [], []
+    def manifests(self):
+        result = []
         for file in sorted(self.data_dir.glob('*.zip')):
             try:
                 with zipfile.ZipFile(file) as archive:
                     m = json.loads(archive.read('manifest.json'))
-                    themes.append({'id': file.stem, 'name': m['name'], 'count': len(m['cards'])})
+                if not isinstance(m, dict) or m.get('id') != file.stem or not isinstance(m.get('cards'), list):
+                    raise ValueError('Métadonnées invalides.')
+                result.append(m)
             except (OSError, KeyError, ValueError, zipfile.BadZipFile):
+                continue
+        return result
+
+    def registry(self, current):
+        entries = {}
+        for m in [x for x in self.manifests() if x['id'] != current['id']] + [current]:
+            if m.get('layout') != 2:
+                continue
+            key = 'Local · '+m['name']+' ['+m['id'][:8]+']'
+            entries[key] = [{'id':c['id'], 'label':c['label'],
+                             'img':'flashcards/'+m['folder']+'/'+c['file']+'.png',
+                             'audio':'audio/'+m['folder']+'/'+c['file']+'.mp3'} for c in m['cards']]
+        script = self.cards_file.read_text(encoding='utf-8')
+        if LAYOUT_BEGIN in script:
+            a = script.index(LAYOUT_BEGIN)
+            b = script.index(LAYOUT_END, a) + len(LAYOUT_END)
+            script = script[:a] + script[b:]
+        return script.rstrip()+'\n\n'+LAYOUT_BEGIN+'\nObject.assign(window.CARD_SETS, '+json.dumps(entries, ensure_ascii=False, indent=2)+');\n'+LAYOUT_END+'\n'
+
+    def store(self, manifest, data):
+        target = self.path_for(manifest['id'])
+        with self.write_lock:
+            old = next((m for m in self.manifests() if m['id'] == manifest['id']), None)
+            folder = old.get('folder') if old else None
+            if not folder:
+                occupied = set()
+                for root in {ROOT, self.project_dir}:
+                    for kind in ['flashcards', 'audio']:
+                        if (root/kind).exists():
+                            occupied.update(f.name.casefold() for f in (root/kind).iterdir())
+                folder = base = slug(manifest['name'])
+                number = 2
+                while folder.casefold() in occupied:
+                    folder = f'{base}-{number}'
+                    number += 1
+            if not re.fullmatch(r'[a-z0-9-]+', folder):
+                raise ValueError('Dossier de thème invalide.')
+            manifest['folder'] = folder
+            manifest['layout'] = 2
+            # Human-readable filenames; never overwrite an unowned existing file.
+            owned = {c.get('file') for c in old['cards']} if old else set()
+            used = set()
+            updates = {}
+            with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                for card in manifest['cards']:
+                    filename = base = slug(card['label'])
+                    number = 2
+                    while (filename in used or (filename not in owned and any(
+                        (self.project_dir/kind/folder/(filename+ext)).exists()
+                        for kind, ext in [('flashcards','.png'),('audio','.mp3')]))):
+                        filename = f'{base}-{number}'
+                        number += 1
+                    used.add(filename)
+                    card['file'] = filename
+                    updates[self.project_dir/'flashcards'/folder/(filename+'.png')] = archive.read(card['image'])
+                    updates[self.project_dir/'audio'/folder/(filename+'.mp3')] = archive.read(card['audio'])
+            updates[target] = repack(manifest, data)
+            updates[self.cards_file] = self.registry(manifest).encode('utf-8')
+            atomic_files(updates)
+        return folder
+
+    def migrate_themes(self):
+        # Keep the previous ZIP before converting version-1 local themes to 187 px.
+        for file in sorted(self.data_dir.glob('*.zip')):
+            try:
+                data = file.read_bytes()
+                with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                    old = json.loads(archive.read('manifest.json'))
+                if old.get('layout') == 2:
+                    folder = old.get('folder', '')
+                    if not re.fullmatch(r'[a-z0-9-]+', folder):
+                        raise ValueError('Dossier invalide.')
+                    complete = all(re.fullmatch(r'[a-z0-9-]+', c.get('file', '')) and
+                        all((self.project_dir/kind/folder/(c['file']+ext)).is_file()
+                            for kind,ext in [('flashcards','.png'),('audio','.mp3')]) for c in old['cards'])
+                    key = 'Local · '+old['name']+' ['+old['id'][:8]+']'
+                    if complete and key in self.cards_file.read_text(encoding='utf-8'):
+                        continue
+                manifest, converted = read_pack(data)
+                if old.get('layout') != 2:
+                    backup = self.data_dir/'avant_migration_187'/file.name
+                    if not backup.exists():
+                        atomic_files({backup:data})
+                self.store(manifest, converted)
+            except (OSError, KeyError, ValueError, zipfile.BadZipFile):
+                self.migration_warnings.append(f'{file.name} : migration impossible, archive conservée.')
+
+    def catalog(self):
+        themes, warnings = [], list(self.migration_warnings)
+        valid = {m['id']:m for m in self.manifests()}
+        for file in sorted(self.data_dir.glob('*.zip')):
+            m = valid.get(file.stem)
+            if m:
+                themes.append({'id':file.stem, 'name':m['name'], 'count':len(m['cards']), 'folder':m.get('folder')})
+            else:
                 warnings.append(f'{file.name} est illisible ; fichier conservé pour récupération.')
         return themes, warnings
 
@@ -232,23 +375,18 @@ class Handler(BaseHTTPRequestHandler):
                 with zipfile.ZipFile(self.server.path_for(tid)) as z: data=z.read(kind+'/'+asset)
                 return self.send(data, 'image/png' if kind=='images' else 'audio/mpeg')
             if path == '/app/cards.js':
-                script = (ROOT/'cards.js').read_text(encoding='utf-8')
-                themes, _ = self.server.catalog()
-                extra = {}
-                for theme in themes:
-                    with zipfile.ZipFile(self.server.path_for(theme['id'])) as z:
-                        m=json.loads(z.read('manifest.json'))
-                    key = 'Local · '+m['name']+' ['+theme['id'][:8]+']'
-                    extra[key] = [{'id':c['id'],'label':c['label'],'img':'/themes/'+theme['id']+'/'+c['image'],
-                                   'audio':'/themes/'+theme['id']+'/'+c['audio']} for c in m['cards']]
-                script += '\nObject.assign(window.CARD_SETS, '+json.dumps(extra,ensure_ascii=False)+');\n'
-                return self.send(script,'text/javascript; charset=utf-8')
+                return self.send(self.server.cards_file.read_bytes(), 'text/javascript; charset=utf-8')
             if path in ['/', '/index.html']:
                 file=ROOT/'local/web/index.html'
             elif path.startswith('/app/'):
                 rel=path[5:] or 'index.html'
                 if not (rel in ['index.html','styles.css','cards.js'] or rel.startswith(('js/','audio/','flashcards/'))):
                     return self.send({'error':'Page introuvable.'},status=404)
+                local_file = (self.server.project_dir/rel).resolve()
+                if not local_file.is_relative_to(self.server.project_dir.resolve()):
+                    raise ValueError('Chemin interdit.')
+                if rel.startswith(('flashcards/', 'audio/')) and local_file.is_file() and any(local_file.is_relative_to((self.server.project_dir/kind).resolve()) for kind in ['flashcards','audio']):
+                    return self.send(local_file.read_bytes(), 'image/png' if local_file.suffix.lower()=='.png' else 'audio/mpeg')
                 file=(ROOT/rel).resolve()
                 if not file.is_relative_to(ROOT): raise ValueError('Chemin interdit.')
                 resolved = file.relative_to(ROOT).as_posix()
@@ -284,14 +422,14 @@ class Handler(BaseHTTPRequestHandler):
                     with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as dest:
                         for name in z.namelist():
                             dest.writestr(name,json.dumps(manifest,ensure_ascii=False) if name=='manifest.json' else z.read(name))
-                self.server.store(manifest,output.getvalue())
-                return self.send({'id':manifest['id'],'name':manifest['name']})
+                folder = self.server.store(manifest,output.getvalue())
+                return self.send({'id':manifest['id'],'name':manifest['name'],'folder':folder})
             payload=json.loads(raw)
             if not isinstance(payload,dict): raise ValueError('Requête invalide.')
             if path=='/api/save':
                 manifest,data=build_pack(payload)
-                self.server.store(manifest,data)
-                return self.send({'id':manifest['id'],'name':manifest['name']})
+                folder = self.server.store(manifest,data)
+                return self.send({'id':manifest['id'],'name':manifest['name'],'folder':folder})
             if path=='/api/tts':
                 label=text(payload.get('label'),100,'Mot anglais')
                 accent=payload.get('accent','co.uk')

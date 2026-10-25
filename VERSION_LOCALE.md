@@ -21,6 +21,13 @@ L'adresse utilise un port disponible ; lancez une seule instance à la fois.
 Ne lancez pas le programme depuis l'intérieur du ZIP et ne déplacez pas les fichiers
 séparément. Le dossier doit être accessible en écriture.
 
+## Mettre à jour une première version locale
+
+Fermez l’atelier, extrayez le nouveau ZIP dans un nouveau dossier et copiez le dossier
+**donnees_locales** de l’ancienne version à côté du nouveau **DEMARRER.bat**, puis lancez-le.
+Gardez l’ancien dossier jusqu’à vérification de vos thèmes. Les images et sons sont
+recréés au bon endroit à partir des ZIP conservés. Ne copiez pas l’ancien dossier `.venv`.
+
 ## Préparer un thème
 
 1. Donnez un nom au thème et choisissez l'anglais britannique ou américain.
@@ -32,7 +39,7 @@ séparément. Le dossier doit être accessible en écriture.
 
 Prévoyez de 2 à 60 cartes, chacune avec un mot, une image et un MP3.
 La valeur de chaque fichier est limitée à 8 Mo. Les images sont copiées,
-réorientées et normalisées en PNG 512 × 512 ; les fichiers d'origine restent intacts.
+réorientées et normalisées en PNG 187 × 187 ; les fichiers d'origine restent intacts.
 La méthode de cadrage reprend celle de votre générateur Python initial.
 Changer le mot invalide son ancien son pour éviter les associations incorrectes.
 Changer la voix ne régénère pas les sons existants : utilisez le bouton de la carte.
@@ -48,11 +55,19 @@ sont utilisables hors connexion après la première installation.
 
 ## Enregistrer, exporter, transporter
 
-- Les thèmes sont conservés sous forme de ZIP dans **donnees_locales**, à côté du lanceur.
+- Les images sont enregistrées dans **flashcards/nom-du-theme/** et les MP3 dans
+  **audio/nom-du-theme/**, comme les thèmes fournis. Par exemple :
+  `flashcards/school-supplies/pencil.png` et `audio/school-supplies/pencil.mp3`.
+- **cards.js** est mis à jour automatiquement pour que le thème soit aussi disponible
+  en ouvrant directement `index.html`. Le nom du dossier reste stable si le thème est renommé.
+- Les ZIP de sauvegarde et les métadonnées de l’atelier restent dans **donnees_locales**.
+- Les anciens thèmes locaux sont convertis en 187 × 187 au démarrage ; leurs ZIP
+  originaux sont conservés dans **donnees_locales/avant_migration_187/**.
+- Un dossier existant n’est pas écrasé : un suffixe est ajouté si nécessaire.
 - **Exporter en ZIP** permet d'obtenir une sauvegarde ou de transporter un thème.
 - Sur un autre ordinateur équipé de la version locale, **Importer un thème ZIP**
   ajoute ce thème. L'import crée une copie et n'écrase pas les thèmes existants.
-- Pour une sauvegarde complète, copiez le dossier **donnees_locales** sur un autre support.
+- Pour une sauvegarde complète, copiez le dossier complet de l’application sur un autre support (ou exportez chaque thème en ZIP).
 - Une erreur d'import ou de génération ne supprime pas les thèmes déjà enregistrés.
 - Les modifications en cours ne sont conservées qu'après **Enregistrer le thème**.
   Une confirmation vous protège lorsque vous quittez une fiche modifiée.
@@ -65,7 +80,7 @@ est disponible dans cette version locale ; il n'est pas encore ajouté au site e
 
 Tests réalisés sur Python 3.12 et Chromium sous Linux :
 
-- 10 tests Python : export/import, modification, redémarrage sur les données persistées,
+- 14 tests Python : export/import, modification, redémarrage sur les données persistées,
   validation des fichiers, refus des chemins dangereux, protection des écritures locales,
   conservation des archives corrompues et gestion des erreurs TTS.
 - 8 parcours de navigateur : création, MP3, sauvegarde, sept activités avec le nouveau

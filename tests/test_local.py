@@ -32,7 +32,7 @@ class PackTests(unittest.TestCase):
         self.assertEqual([c['label'] for c in imported['cards']],['Pencil','Ruler'])
         with zipfile.ZipFile(io.BytesIO(new_data)) as z:
             with Image.open(io.BytesIO(z.read(imported['cards'][0]['image']))) as image:
-                self.assertEqual(image.size,(512,512))
+                self.assertEqual(image.size,(187,187))
 
     def test_missing_audio_and_small_theme(self):
         data=fixture();data['cards'][0]['audio']=None
@@ -90,13 +90,70 @@ class ApiTests(unittest.TestCase):
         self.assertIn('Local · Updated',script)
         self.assertIn('window.CARD_SETS',script)
 
+    def test_readable_files_and_static_registration(self):
+        result=self.call('/api/save',fixture())
+        self.assertEqual(result['folder'],'school-supplies')
+        root=self.server.project_dir
+        with Image.open(root/'flashcards/school-supplies/pencil.png') as image:
+            self.assertEqual(image.size,(187,187))
+        expected=(server.ROOT/'audio/fruits/apple.mp3').read_bytes()
+        self.assertEqual((root/'audio/school-supplies/pencil.mp3').read_bytes(),expected)
+        self.assertEqual(self.call('/app/audio/school-supplies/pencil.mp3',raw=True),expected)
+        self.assertIn('flashcards/school-supplies/pencil.png',(root/'cards.js').read_text())
+        self.assertIn('audio/school-supplies/ruler.mp3',(root/'cards.js').read_text())
+        imported=self.call('/api/import',self.call('/api/themes/'+result['id']+'/export',raw=True))
+        self.assertEqual(imported['folder'],'school-supplies-2')
+
+    def test_builtin_folders_and_unowned_files_preserved(self):
+        payload=fixture();payload['name']='fruits'
+        result=self.call('/api/save',payload)
+        self.assertEqual(result['folder'],'fruits-2')
+        root=self.server.project_dir
+        stranger=root/'flashcards/fruits-2/book.png'
+        stranger.write_bytes(b'preserve me')
+        current=self.call('/api/themes/'+result['id'])
+        current['cards'][0]['label']='Book'
+        self.call('/api/save',current)
+        self.assertEqual(stranger.read_bytes(),b'preserve me')
+        self.assertTrue((stranger.parent/'book-2.png').exists())
+
+    def test_old_theme_migration_keeps_original(self):
+        payload=fixture()
+        image=io.BytesIO();Image.new('RGB',(512,512),'blue').save(image,'PNG')
+        old_manifest,raw=server.build_pack(payload)
+        out=io.BytesIO()
+        with zipfile.ZipFile(io.BytesIO(raw)) as source, zipfile.ZipFile(out,'w') as target:
+            for name in source.namelist():
+                target.writestr(name,image.getvalue() if name.endswith('.png') else source.read(name))
+        old_data=out.getvalue()
+        file=Path(self.temp.name)/(old_manifest['id']+'.zip')
+        file.write_bytes(old_data)
+        self.server.migrate_themes()
+        self.assertEqual((Path(self.temp.name)/'avant_migration_187'/file.name).read_bytes(),old_data)
+        with Image.open(self.server.project_dir/'flashcards/school-supplies/pencil.png') as converted:
+            self.assertEqual(converted.size,(187,187))
+        self.assertEqual(len(self.call('/api/themes')['themes']),1)
+        # A second migration does not create another theme or touch the backup.
+        self.server.migrate_themes()
+        self.assertEqual((Path(self.temp.name)/'avant_migration_187'/file.name).read_bytes(),old_data)
+
+    def test_restores_theme_after_copying_local_backups(self):
+        result=self.call('/api/save',fixture())
+        missing=self.server.project_dir/'flashcards/school-supplies/pencil.png'
+        missing.unlink()
+        self.server.cards_file.write_bytes((server.ROOT/'cards.js').read_bytes())
+        self.server.migrate_themes()
+        self.assertTrue(missing.exists())
+        self.assertIn('school-supplies/pencil.png',self.server.cards_file.read_text())
+        self.assertEqual(len(self.call('/api/themes')['themes']),1)
+
     def test_csrf_host_and_traversal(self):
         with self.assertRaises(HTTPError) as cm:self.call('/api/save',fixture(),token=False)
         self.assertEqual(cm.exception.code,403)
         req=Request(self.base+'/api/session',headers={'Host':'evil.example'})
         with self.assertRaises(HTTPError) as cm:urlopen(req)
         self.assertEqual(cm.exception.code,403)
-        for path in ['/app/js/../../.git/config','/app/js/../local/server.py']:
+        for path in ['/app/js/../../.git/config','/app/js/../local/server.py','/app/flashcards/../.git/config','/app/audio/../local/server.py']:
             with self.assertRaises(HTTPError):self.call(path,raw=True)
 
     def test_import_errors_preserve_saved_theme(self):

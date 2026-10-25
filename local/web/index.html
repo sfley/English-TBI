@@ -4,7 +4,7 @@
 <body>
 <header class="top"><div><span class="eyebrow">ENGLISH TBI · SUR CET ORDINATEUR</span><h1>Votre atelier de thèmes</h1><p>Des images, des mots, des voix. Puis place aux jeux.</p></div><a class="button primary" href="/app/">Ouvrir les 7 activités →</a></header>
 <main>
-<section class="library"><div class="section-title"><h2>Mes thèmes</h2><button id="new-theme">Nouveau thème</button></div><p>Les thèmes sont conservés dans le dossier <strong>donnees_locales</strong>, à côté du lanceur. Exportez-les pour les transporter ou les sauvegarder.</p><div id="themes" class="theme-list"></div><label class="button import">Importer un thème ZIP <input id="import-theme" type="file" accept=".zip" hidden></label><p id="library-message" role="status"></p></section>
+<section class="library"><div class="section-title"><h2>Mes thèmes</h2><button id="new-theme">Nouveau thème</button></div><p>Les images sont rangées dans <strong>flashcards/nom-du-theme/</strong> et les sons dans <strong>audio/nom-du-theme/</strong>. Les images sont ajustées à <strong>187 × 187 pixels</strong>. Exportez un ZIP pour transporter un thème.</p><div id="themes" class="theme-list"></div><label class="button import">Importer un thème ZIP <input id="import-theme" type="file" accept=".zip" hidden></label><p id="library-message" role="status"></p></section>
 <section class="editor"><div class="section-title"><h2 id="editor-title">Créer un thème</h2><span id="saved-state">Non enregistré</span></div>
 <p class="hint">Les mots envoyés au service gTTS servent à produire les voix. Internet est nécessaire uniquement pour cette génération et la première installation. Aucun jeton n’est requis.</p>
 <fieldset id="editor-fields"><legend class="sr-only">Contenu du thème</legend>
@@ -17,6 +17,6 @@
 </fieldset><p id="message" role="status" aria-live="polite"></p>
 <p class="hint">Prévoyez au moins 2 cartes avec une image et un son chacune. Les fichiers audio importés doivent être des MP3. Les modifications ne sont conservées qu’après « Enregistrer le thème ».</p>
 </section>
-</main><footer>Version locale 1 · Aucun compte élève · Aucun envoi automatique vers GitHub ou La Forge</footer>
+</main><footer>Version locale 1.1 · Aucun compte élève · Aucun envoi automatique vers GitHub ou La Forge</footer>
 <script src="atelier.js"></script>
 </body></html>

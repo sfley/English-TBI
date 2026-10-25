@@ -81,7 +81,7 @@ function setPlayLink(name){const key=`Local · ${name} [${model.id.slice(0,8)}]`
 async function save(){
  for(const c of model.cards)if(c.audioLabel!==c.label.trim())c.audio=null;
  const result=await request('/api/save',{id:model.id,name:$('theme-name').value,credit:$('credit').value,cards:model.cards.map(c=>({...c,label:c.label.trim()}))});
- model.id=result.id;model.dirty=false;$('saved-state').textContent='Enregistré sur cet ordinateur';setPlayLink(result.name);await loadCatalog();message('Thème enregistré. Vous pouvez jouer ou exporter une sauvegarde ZIP.');return result;
+ model.id=result.id;model.dirty=false;$('saved-state').textContent='Enregistré sur cet ordinateur';setPlayLink(result.name);await loadCatalog();message(`Thème enregistré : images dans flashcards/${result.folder}/, sons dans audio/${result.folder}/. Le fichier cards.js est mis à jour.`);return result;
 }
 $('new-theme').onclick=newTheme;
 $('theme-name').oninput=dirty;$('credit').oninput=dirty;

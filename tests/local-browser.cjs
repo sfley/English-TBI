@@ -44,7 +44,7 @@ const base=process.env.LOCAL_TEST_URL||'http://127.0.0.1:8092/';
     await play.evaluate(()=>Promise.all([...document.querySelectorAll('#stage img')].map(i=>i.decode())));
    }
    const result=await play.evaluate(async()=>{
-    const audio=Object.values(CARD_SETS).flat().filter(c=>c.audio.startsWith('/themes/'));const context=new AudioContext();
+    const audio=Object.values(CARD_SETS).flat().filter(c=>c.audio.startsWith('audio/school-supplies-browser'));const context=new AudioContext();
     for(const c of audio){const r=await fetch(c.audio);if(!r.ok)throw Error('missing audio');await context.decodeAudioData(await r.arrayBuffer());}await context.close();return audio.length;
    });assert.ok(result>=2);await play.close();
   });
