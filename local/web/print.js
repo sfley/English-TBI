@@ -16,9 +16,9 @@ async function generate(){
     const sets=Number($('sets').value);
     if(!Number.isInteger(sets)||sets<1||sets>40)throw Error('Choisissez de 1 à 40 séries.');
     const cols=6,rows=Math.ceil(cards.length/cols);
-    // Fit complete pupil sets on each sheet. Keep cards at least ~30 mm high.
-    const height=$('show-label').checked?38:32;
-    const perSheet=Math.max(1,Math.floor(254/(rows*height+5)));
+    // Three complete sets of up to 18 cards fit with 5 mm vertical margins.
+    const height=30;
+    const perSheet=Math.max(1,Math.floor(280/(rows*height+3)));
     for(let first=0;first<sets;first+=perSheet){
      const page=sheet(Math.floor(first/perSheet)+1);page.classList.add('economy');
      for(let k=first;k<Math.min(first+perSheet,sets);k++){

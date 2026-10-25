@@ -3,3 +3,5 @@
 .boards{display:grid;grid-template-rows:repeat(2,minmax(0,1fr));gap:5mm;flex:1;min-height:0}.boards .board{margin:0}
 
 .economy .sheet-header{font-size:9pt;min-height:5mm;margin-bottom:2mm}.pupil-set{display:flex;flex-direction:column;flex-shrink:0;margin-bottom:5mm}.pupil-set>small{font-size:8pt;line-height:3mm}.pupil-set .print-grid{gap:0}.pupil-set .tile{padding:1mm;gap:0;border:0.2mm dashed #aaa}.pupil-set .word{font-size:9pt}.economy .print-grid{flex:1;min-height:0}
+
+@page economy{size:A4 portrait;margin:5mm 10mm}.sheet.economy{page:economy;padding-top:5mm;padding-bottom:5mm}.economy .pupil-set{margin-bottom:3mm}.economy .pupil-set:last-child{margin-bottom:0}@media print{.sheet.economy{height:287mm;padding:0}}

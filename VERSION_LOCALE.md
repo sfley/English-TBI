@@ -88,8 +88,9 @@ Dans « Mes thèmes », cliquez sur **Imprimer** à côté du thème souhaité.
 
 - **Flashcards élèves — planche économique** : six colonnes de petites cartes,
   séries complètes regroupées sur les feuilles. Choisissez de 1 à 40 séries (par exemple
-  le nombre d’élèves). Avec les 17 fruits, deux séries tiennent sur une seule feuille A4,
-  comme dans votre modèle PDF : 24 élèves donnent 12 feuilles au lieu de 72 en grandes cartes.
+  le nombre d’élèves). Avec les 17 fruits, trois séries tiennent sur une seule feuille A4,
+  avec des marges hautes et basses de 5 mm : 24 élèves donnent 8 feuilles au lieu de 72 en grandes cartes.
+  Une série de 18 cartes tient également trois fois sur une A4 (54 petites cartes).
   Les contours discrets aident à la découpe. Les mots sont facultatifs.
 - **Grandes cartes collectives** : 2, 4, 6 ou 8 cartes par feuille A4, avec ou sans mots.
 - **Loto** : grilles de 4, 6 ou 9 cases, de 1 à 30 grilles, deux grilles par feuille A4.
@@ -140,7 +141,7 @@ Tests réalisés sur Python 3.12 et Chromium sous Linux :
   du nom Feelings, flashcards avec/sans mots, loto, validation des quantités et
   génération réelle de PDF A4 avec vérification du nombre de pages.
 - 6 contrôles de séance supplémentaires : PDF économique A4 (deux séries de 17 fruits),
-  24 séries sur 12 pages, sélection partagée par les sept jeux, persistance des liens/PDF
+  24 séries sur 8 pages, sélection partagée par les sept jeux, persistance des liens/PDF
   lecture réelle de MP3/vidéo locale et prise en compte de la sélection pour l’impression/loto.
 - 30 contrôles de non-régression sur les jeux et les médias fournis.
 
