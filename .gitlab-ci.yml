@@ -1,0 +1,14 @@
+# Compatible with GitLab Pages on La Forge; only static application files are published.
+image: alpine:3.21
+
+pages:
+  stage: deploy
+  script:
+    - mkdir -p public
+    - cp index.html styles.css cards.js public/
+    - cp -R js audio flashcards public/
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

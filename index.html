@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flashcards TBI – Offline</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" aria-label="Menu des jeux et contrôles">
+      <header class="sidebar__header">
+        <h1>Jeux de Flashcards</h1>
+      </header>
+
+      <section id="globalTheme" class="controls" aria-label="Thème (global)"><!-- app.js injecte --></section>
+      <!-- Séparateur INSÉRÉ aussi par app.js juste après le thème pour garantir la présence -->
+      <hr class="divider" id="afterThemeDivider">
+
+      <nav class="games" aria-label="Choix du jeu">
+        <ul id="gameList" class="games__list"></ul>
+      </nav>
+
+      <hr class="divider">
+
+      <section id="controls" class="controls" aria-label="Contrôles du jeu"></section>
+
+      <hr class="divider soft">
+
+      <section class="global-controls" aria-label="Affichage"></section>
+    </aside>
+
+    <main id="stage" class="stage" aria-live="polite" aria-label="Zone d'affichage des cartes">
+      <div id="cardContainer" class="card-container"></div>
+    </main>
+  </div>
+
+  <script src="cards.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/games/tableau.js"></script>
+  <script src="js/games/listen.js"></script>
+  <script src="js/games/mask.js"></script>
+  <script src="js/games/pairs.js"></script>
+  <script src="js/games/order.js"></script>
+  <script src="js/games/missing.js"></script>
+  <script src="js/games/vf.js"></script>
+  <script> window.BOOT_GAME = (new URLSearchParams(location.search).get('game')) || 'tableau'; </script>
+  <script src="js/app.js"></script>
+</body>
+</html>
