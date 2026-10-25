@@ -78,16 +78,17 @@ class ApiTests(unittest.TestCase):
         current=self.call('/api/themes/'+tid)
         self.assertEqual(current['credit'],'Images personnelles')
         current['name']='Updated';self.call('/api/save',current)
-        self.assertEqual(len(self.call('/api/themes')['themes']),1)
+        self.assertEqual(len(self.call('/api/themes')['themes']),3)
         pack=self.call('/api/themes/'+tid+'/export',raw=True)
         imported=self.call('/api/import',pack)
         self.assertNotEqual(imported['id'],tid)
-        self.assertEqual(len(self.call('/api/themes')['themes']),2)
+        self.assertEqual(len(self.call('/api/themes')['themes']),4)
         restored=server.WorkshopServer(data_dir=self.temp.name)
-        try:self.assertEqual(len(restored.catalog()[0]),2)
+        try:self.assertEqual(len(restored.catalog()[0]),4)
         finally:restored.server_close()
         script=self.call('/app/cards.js',raw=True).decode()
-        self.assertIn('Local · Updated',script)
+        self.assertIn('Updated',script)
+        self.assertNotIn('Local ·',script)
         self.assertIn('window.CARD_SETS',script)
 
     def test_readable_files_and_static_registration(self):
@@ -132,7 +133,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual((Path(self.temp.name)/'avant_migration_187'/file.name).read_bytes(),old_data)
         with Image.open(self.server.project_dir/'flashcards/school-supplies/pencil.png') as converted:
             self.assertEqual(converted.size,(187,187))
-        self.assertEqual(len(self.call('/api/themes')['themes']),1)
+        self.assertEqual(len(self.call('/api/themes')['themes']),3)
         # A second migration does not create another theme or touch the backup.
         self.server.migrate_themes()
         self.assertEqual((Path(self.temp.name)/'avant_migration_187'/file.name).read_bytes(),old_data)
@@ -145,7 +146,23 @@ class ApiTests(unittest.TestCase):
         self.server.migrate_themes()
         self.assertTrue(missing.exists())
         self.assertIn('school-supplies/pencil.png',self.server.cards_file.read_text())
-        self.assertEqual(len(self.call('/api/themes')['themes']),1)
+        self.assertEqual(len(self.call('/api/themes')['themes']),3)
+
+    def test_builtin_themes_editable_and_exact_theme_names(self):
+        themes=self.call('/api/themes')['themes']
+        self.assertEqual({t['name'] for t in themes},{'fruits','wild animals'})
+        for theme in themes:
+            data=self.call('/api/themes/'+theme['id'])
+            self.assertEqual(len(data['cards']),17 if theme['name']=='fruits' else 13)
+            self.assertTrue(all(c['image'].startswith('data:image/') and c['audio'].startswith('data:audio/') for c in data['cards']))
+        fruits=next(t for t in themes if t['name']=='fruits')
+        data=self.call('/api/themes/'+fruits['id']);data['name']='Feelings'
+        saved=self.call('/api/save',data)
+        self.assertEqual(saved['key'],'fruits')
+        self.assertEqual(saved['folder'],'fruits')
+        script=self.call('/app/cards.js',raw=True).decode()
+        self.assertIn('"fruits": "Feelings"',script)
+        self.assertNotIn('Local ·',script)
 
     def test_csrf_host_and_traversal(self):
         with self.assertRaises(HTTPError) as cm:self.call('/api/save',fixture(),token=False)
@@ -160,7 +177,7 @@ class ApiTests(unittest.TestCase):
         self.call('/api/save',fixture())
         with self.assertRaises(HTTPError) as cm:self.call('/api/import',b'bad zip')
         self.assertEqual(cm.exception.code,400)
-        self.assertEqual(len(self.call('/api/themes')['themes']),1)
+        self.assertEqual(len(self.call('/api/themes')['themes']),3)
 
     def test_corrupt_saved_archive_preserved(self):
         file=Path(self.temp.name)/('a'*32+'.zip');file.write_bytes(b'broken')

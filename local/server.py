@@ -149,6 +149,10 @@ def read_pack(data):
         raise ValueError('Archive de thème invalide ou incomplète.') from exc
 
 
+def theme_key(manifest):
+    return manifest.get('builtin_key') or 'theme-'+manifest['id']
+
+
 def slug(value):
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode().lower()
     result = re.sub(r'[^a-z0-9]+', '-', value).strip('-')[:60] or 'theme'
@@ -209,8 +213,41 @@ class WorkshopServer(ThreadingHTTPServer):
         self.write_lock = threading.Lock()
         self.tts_lock = threading.Lock()
         self.migration_warnings = []
+        self.seed_builtin_themes()
         self.migrate_themes()
         super().__init__(('127.0.0.1', port), Handler)
+
+    def seed_builtin_themes(self):
+        source = (ROOT/'cards.js').read_text(encoding='utf-8')
+        match = re.search(r'window.CARD_SETS\s*=\s*', source)
+        sets, _ = json.JSONDecoder().raw_decode(source[match.end():])
+        for name, cards in sets.items():
+            tid = uuid.uuid5(uuid.NAMESPACE_URL, 'english-tbi-builtin:'+name).hex
+            if self.path_for(tid).exists():
+                continue
+            manifest = {'format':'english-tbi-theme','version':1,'id':tid,'name':name,
+                        'credit':'Ressources du thème fourni dans english.zip.',
+                        'builtin_key':name,'layout':2,'folder':name,'cards':[]}
+            output = io.BytesIO()
+            updates = {}
+            with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
+                for c in cards:
+                    filename = Path(c['img']).stem
+                    item = {'id':c['id'],'label':c['label'],'file':filename,
+                            'image':'images/'+filename+'.png','audio':'audio/'+filename+'.mp3'}
+                    manifest['cards'].append(item)
+                    for field, kind, ext in [('image','flashcards','.png'),('audio','audio','.mp3')]:
+                        original = ROOT/(c['img'] if field=='image' else c['audio'])
+                        content = original.read_bytes()
+                        archive.writestr(item[field],content)
+                        target = self.project_dir/kind/name/(filename+ext)
+                        if not target.exists(): updates[target] = content
+                archive.writestr('manifest.json',json.dumps(manifest,ensure_ascii=False))
+            data = output.getvalue()
+            updates[self.path_for(tid)] = data
+            backup = self.data_dir/'originaux'/ (tid+'.zip')
+            if not backup.exists(): updates[backup] = data
+            atomic_files(updates)
 
     def path_for(self, tid):
         if not ID.fullmatch(tid):
@@ -231,11 +268,12 @@ class WorkshopServer(ThreadingHTTPServer):
         return result
 
     def registry(self, current):
-        entries = {}
+        entries, labels = {}, {}
         for m in [x for x in self.manifests() if x['id'] != current['id']] + [current]:
             if m.get('layout') != 2:
                 continue
-            key = 'Local · '+m['name']+' ['+m['id'][:8]+']'
+            key = theme_key(m)
+            labels[key] = m['name']
             entries[key] = [{'id':c['id'], 'label':c['label'],
                              'img':'flashcards/'+m['folder']+'/'+c['file']+'.png',
                              'audio':'audio/'+m['folder']+'/'+c['file']+'.mp3'} for c in m['cards']]
@@ -244,13 +282,15 @@ class WorkshopServer(ThreadingHTTPServer):
             a = script.index(LAYOUT_BEGIN)
             b = script.index(LAYOUT_END, a) + len(LAYOUT_END)
             script = script[:a] + script[b:]
-        return script.rstrip()+'\n\n'+LAYOUT_BEGIN+'\nObject.assign(window.CARD_SETS, '+json.dumps(entries, ensure_ascii=False, indent=2)+');\n'+LAYOUT_END+'\n'
+        return script.rstrip()+'\n\n'+LAYOUT_BEGIN+'\nObject.assign(window.CARD_SETS, '+json.dumps(entries, ensure_ascii=False, indent=2)+');\nwindow.THEME_NAMES = '+json.dumps(labels,ensure_ascii=False)+';\n'+LAYOUT_END+'\n'
 
     def store(self, manifest, data):
         target = self.path_for(manifest['id'])
         with self.write_lock:
             old = next((m for m in self.manifests() if m['id'] == manifest['id']), None)
             folder = old.get('folder') if old else None
+            if old and old.get('builtin_key'):
+                manifest['builtin_key'] = old['builtin_key']
             if not folder:
                 occupied = set()
                 for root in {ROOT, self.project_dir}:
@@ -262,7 +302,7 @@ class WorkshopServer(ThreadingHTTPServer):
                 while folder.casefold() in occupied:
                     folder = f'{base}-{number}'
                     number += 1
-            if not re.fullmatch(r'[a-z0-9-]+', folder):
+            if not re.fullmatch(r'[a-z0-9][a-z0-9 -]*', folder):
                 raise ValueError('Dossier de thème invalide.')
             manifest['folder'] = folder
             manifest['layout'] = 2
@@ -297,13 +337,13 @@ class WorkshopServer(ThreadingHTTPServer):
                     old = json.loads(archive.read('manifest.json'))
                 if old.get('layout') == 2:
                     folder = old.get('folder', '')
-                    if not re.fullmatch(r'[a-z0-9-]+', folder):
+                    if not re.fullmatch(r'[a-z0-9][a-z0-9 -]*', folder):
                         raise ValueError('Dossier invalide.')
                     complete = all(re.fullmatch(r'[a-z0-9-]+', c.get('file', '')) and
                         all((self.project_dir/kind/folder/(c['file']+ext)).is_file()
                             for kind,ext in [('flashcards','.png'),('audio','.mp3')]) for c in old['cards'])
-                    key = 'Local · '+old['name']+' ['+old['id'][:8]+']'
-                    if complete and key in self.cards_file.read_text(encoding='utf-8'):
+                    key = theme_key(old)
+                    if complete and json.dumps(key) in self.cards_file.read_text(encoding='utf-8') and 'window.THEME_NAMES =' in self.cards_file.read_text(encoding='utf-8'):
                         continue
                 manifest, converted = read_pack(data)
                 if old.get('layout') != 2:
@@ -320,7 +360,7 @@ class WorkshopServer(ThreadingHTTPServer):
         for file in sorted(self.data_dir.glob('*.zip')):
             m = valid.get(file.stem)
             if m:
-                themes.append({'id':file.stem, 'name':m['name'], 'count':len(m['cards']), 'folder':m.get('folder')})
+                themes.append({'id':file.stem, 'name':m['name'], 'count':len(m['cards']), 'folder':m.get('folder'),'key':theme_key(m),'builtin':bool(m.get('builtin_key'))})
             else:
                 warnings.append(f'{file.name} est illisible ; fichier conservé pour récupération.')
         return themes, warnings
@@ -364,6 +404,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send(data, 'application/zip', filename=f'theme-{tid[:8]}.zip')
                 with zipfile.ZipFile(io.BytesIO(data)) as z:
                     m = json.loads(z.read('manifest.json'))
+                    m['key'] = theme_key(m)
                     for card in m['cards']:
                         for key, mime in [('image','image/png'),('audio','audio/mpeg')]:
                             card[key] = f'data:{mime};base64,'+base64.b64encode(z.read(card[key])).decode()
@@ -392,7 +433,7 @@ class Handler(BaseHTTPRequestHandler):
                 resolved = file.relative_to(ROOT).as_posix()
                 if not (resolved in ['index.html','styles.css','cards.js'] or any(file.is_relative_to(ROOT/d) for d in ['js','audio','flashcards'])):
                     raise ValueError('Chemin interdit.')
-            elif path in ['/atelier.js','/atelier.css']:
+            elif path in ['/atelier.js','/atelier.css','/print.html','/print.js','/print.css']:
                 file=ROOT/'local/web'/path[1:]
             elif path=='/favicon.ico': return self.send(b'',status=204)
             else: return self.send({'error':'Page introuvable.'},status=404)
@@ -423,13 +464,13 @@ class Handler(BaseHTTPRequestHandler):
                         for name in z.namelist():
                             dest.writestr(name,json.dumps(manifest,ensure_ascii=False) if name=='manifest.json' else z.read(name))
                 folder = self.server.store(manifest,output.getvalue())
-                return self.send({'id':manifest['id'],'name':manifest['name'],'folder':folder})
+                return self.send({'id':manifest['id'],'name':manifest['name'],'folder':folder,'key':theme_key(manifest)})
             payload=json.loads(raw)
             if not isinstance(payload,dict): raise ValueError('Requête invalide.')
             if path=='/api/save':
                 manifest,data=build_pack(payload)
                 folder = self.server.store(manifest,data)
-                return self.send({'id':manifest['id'],'name':manifest['name'],'folder':folder})
+                return self.send({'id':manifest['id'],'name':manifest['name'],'folder':folder,'key':theme_key(manifest)})
             if path=='/api/tts':
                 label=text(payload.get('label'),100,'Mot anglais')
                 accent=payload.get('accent','co.uk')

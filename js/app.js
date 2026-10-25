@@ -86,7 +86,7 @@
     const select = el('select', { className: 'block', attrs: { 'aria-label': 'Global theme selection' } });
     const sets = window.CARD_SETS || {};
     Object.keys(sets).forEach(key => {
-      const opt = el('option', { text: key, attrs: { value: key } });
+      const opt = el('option', { text: window.THEME_NAMES?.[key] || key, attrs: { value: key } });
       if (key === state.setKey) opt.selected = true;
       select.appendChild(opt);
     });

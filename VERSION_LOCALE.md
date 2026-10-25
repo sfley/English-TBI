@@ -53,6 +53,30 @@ conservent la vérification des certificats.
 Les fruits et les animaux fournis, ainsi que les thèmes enregistrés avec leurs sons,
 sont utilisables hors connexion après la première installation.
 
+## Retrouver et modifier les thèmes fournis
+
+**fruits** et **wild animals** apparaissent automatiquement dans « Mes thèmes » avec
+leurs images et leurs sons. Cliquez sur **Modifier** pour les ouvrir dans l’éditeur.
+Leurs ZIP d’origine sont conservés dans **donnees_locales/originaux/**.
+Le nom affiché dans les jeux et sur les impressions est exactement celui choisi
+(par exemple **Feelings**), sans préfixe « Local » ni identifiant ajouté.
+
+## Flashcards et grilles de loto à imprimer
+
+Dans « Mes thèmes », cliquez sur **Imprimer** à côté du thème souhaité.
+
+- **Flashcards** : 2, 4, 6 ou 8 cartes par feuille A4, avec ou sans les mots.
+- **Loto** : grilles de 4, 6 ou 9 cases, de 1 à 30 grilles, deux grilles par feuille A4.
+  Une même image n’apparaît qu’une fois par grille. Les dispositions sont différentes
+  entre les grilles. Le thème doit contenir au moins autant de cartes que de cases.
+- Cliquez sur **Préparer les pages**, puis sur **Imprimer / Enregistrer en PDF**.
+- Dans le dialogue du navigateur : A4, portrait, échelle 100 %, sans les en-têtes
+  ni les pieds de page du navigateur. Pour le loto, les flashcards du thème servent
+  de cartes d’appel ou de pioche.
+
+Les images et les fichiers d’impression restent sur votre ordinateur. Les PDF
+sont enregistrés à l’endroit choisi dans le dialogue d’impression du navigateur.
+
 ## Enregistrer, exporter, transporter
 
 - Les images sont enregistrées dans **flashcards/nom-du-theme/** et les MP3 dans
@@ -80,12 +104,15 @@ est disponible dans cette version locale ; il n'est pas encore ajouté au site e
 
 Tests réalisés sur Python 3.12 et Chromium sous Linux :
 
-- 14 tests Python : export/import, modification, redémarrage sur les données persistées,
+- 15 tests Python : export/import, modification, redémarrage sur les données persistées,
   validation des fichiers, refus des chemins dangereux, protection des écritures locales,
   conservation des archives corrompues et gestion des erreurs TTS.
 - 8 parcours de navigateur : création, MP3, sauvegarde, sept activités avec le nouveau
   thème, téléchargement réel du ZIP, import sans écrasement, rechargement, modification,
   erreur réseau et génération par lot avec réponse distante simulée.
+- 6 contrôles supplémentaires : ouverture des deux thèmes fournis, affichage exact
+  du nom Feelings, flashcards avec/sans mots, loto, validation des quantités et
+  génération réelle de PDF A4 avec vérification du nombre de pages.
 - 30 contrôles de non-régression sur les jeux et les médias fournis.
 
 La réponse audio TTS distante est simulée dans les tests déterministes ; l'appel réel

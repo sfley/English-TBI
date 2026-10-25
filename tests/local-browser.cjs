@@ -37,7 +37,7 @@ const base=process.env.LOCAL_TEST_URL||'http://127.0.0.1:8092/';
    const href=await page.locator('#play-theme').getAttribute('href');
    const play=await browser.newPage();play.on('pageerror',e=>errors.push(e.message));
    await play.goto(new URL(href,base).href);await play.waitForSelector('#stage .card');
-   assert.match(await play.locator('#globalTheme select').inputValue(),/School supplies browser/);
+   assert.match(await play.locator('#globalTheme select option:checked').textContent(),/School supplies browser/);
    for(let i=0;i<7;i++){
     await play.locator('#gameList button').nth(i).click();assert.ok(await play.locator('#stage .card').count()>0);
     const labels=await play.locator('#stage img').evaluateAll(es=>es.map(e=>e.alt));assert.ok(labels.every(s=>['Pencil','Ruler'].includes(s)));
@@ -58,7 +58,7 @@ const base=process.env.LOCAL_TEST_URL||'http://127.0.0.1:8092/';
   });
   await check('persistance après rechargement et modification d’un thème',async()=>{
    await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.theme-item').length>=2);
-   await page.locator('.theme-item button').first().click();await page.waitForFunction(()=>document.querySelectorAll('.card').length===2);
+   await page.locator('.theme-item').filter({hasText:'School supplies browser'}).first().locator('button').first().click();await page.waitForFunction(()=>document.querySelectorAll('.card').length===2);
    assert.equal(await page.locator('#credit').inputValue(),'Images et sons de test');
    await page.locator('.card input[aria-label="Mot anglais"]').first().fill('Book');await page.locator('.card input[aria-label="Mot anglais"]').first().press('Tab');
    await page.waitForFunction(()=>document.querySelectorAll('.card audio').length===1);
