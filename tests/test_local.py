@@ -164,6 +164,25 @@ class ApiTests(unittest.TestCase):
         self.assertIn('"fruits": "Feelings"',script)
         self.assertNotIn('Local ·',script)
 
+    def test_session_selection_and_resources(self):
+        theme=next(t for t in self.call('/api/themes')['themes'] if t['name']=='fruits')
+        tid=theme['id']
+        full=self.call('/api/themes/'+tid)
+        selected=[c['file'] for c in full['cards'][:6]]
+        self.call('/api/lesson?theme='+tid,{'selected':selected})
+        self.assertEqual(len(self.call('/api/themes/'+tid+'?selection=1')['cards']),6)
+        self.assertEqual(len(self.call('/api/themes/'+tid)['cards']),17)
+        with self.assertRaises(HTTPError):self.call('/api/lesson?theme='+tid,{'selected':selected[:1]})
+        with self.assertRaises(HTTPError):self.call('/api/resource?theme='+tid+'&title=Bad&kind=game&mode=link',b'javascript:alert(1)')
+        saved=self.call('/api/resource?theme='+tid+'&title=Game&kind=game&mode=link',b'https://example.org/game')
+        self.assertEqual(saved['resources'][0]['url'],'https://example.org/game')
+        raw=b'%PDF-1.4 test resource'
+        saved=self.call('/api/resource?theme='+tid+'&title=Preparation&kind=prep&mode=file&ext=pdf',raw)
+        self.assertEqual(self.call(saved['resources'][1]['url'],raw=True),raw)
+        restored=server.WorkshopServer(data_dir=self.temp.name)
+        try:self.assertEqual(restored.session_data(tid)['selected'],selected)
+        finally:restored.server_close()
+
     def test_csrf_host_and_traversal(self):
         with self.assertRaises(HTTPError) as cm:self.call('/api/save',fixture(),token=False)
         self.assertEqual(cm.exception.code,403)

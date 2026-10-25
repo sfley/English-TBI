@@ -61,11 +61,37 @@ Leurs ZIP d’origine sont conservés dans **donnees_locales/originaux/**.
 Le nom affiché dans les jeux et sur les impressions est exactement celui choisi
 (par exemple **Feelings**), sans préfixe « Local » ni identifiant ajouté.
 
+## Séance et ressources
+
+Le bouton **Séance et ressources** de chaque thème permet de choisir un nombre de
+cartes, ou de cocher précisément les mots souhaités. Cliquez sur **Utiliser cette sélection**.
+La sélection est enregistrée sur disque et partagée par les sept jeux et les impressions.
+Le thème complet reste intact. Rechargez les onglets des jeux/impressions déjà ouverts
+pour appliquer la nouvelle sélection. **Toutes les cartes**, puis **Utiliser cette sélection**,
+permet de revenir au thème entier. Deux cartes minimum sont nécessaires.
+
+Vous pouvez associer au même thème des chansons, vidéos, jeux en ligne, fiches de
+préparation/de séance et autres ressources, avec un titre et des notes/source.
+Les liens HTTP/HTTPS s’ouvrent dans un nouvel onglet sur demande. Les fichiers locaux
+acceptés sont MP3, MP4, WebM, OGG et PDF, jusqu’à 64 Mo. Les sons/vidéos ne démarrent
+pas automatiquement et s’arrêtent au changement de thème ou au départ de la page.
+Certains codecs peuvent dépendre de votre navigateur ; préférez MP3 et MP4 H.264/AAC.
+
+Les sélections sont enregistrées sous **donnees_locales/seances/**, et les fichiers
+supplémentaires sous **donnees_locales/ressources/**. Sauvegardez **donnees_locales**
+en entier pour les transporter : le ZIP exporté d’un thème contient ses cartes et leurs
+sons, mais pas les ressources de rituel ni les sélections de séance.
+
 ## Flashcards et grilles de loto à imprimer
 
 Dans « Mes thèmes », cliquez sur **Imprimer** à côté du thème souhaité.
 
-- **Flashcards** : 2, 4, 6 ou 8 cartes par feuille A4, avec ou sans les mots.
+- **Flashcards élèves — planche économique** : six colonnes de petites cartes,
+  séries complètes regroupées sur les feuilles. Choisissez de 1 à 40 séries (par exemple
+  le nombre d’élèves). Avec les 17 fruits, deux séries tiennent sur une seule feuille A4,
+  comme dans votre modèle PDF : 24 élèves donnent 12 feuilles au lieu de 72 en grandes cartes.
+  Les contours discrets aident à la découpe. Les mots sont facultatifs.
+- **Grandes cartes collectives** : 2, 4, 6 ou 8 cartes par feuille A4, avec ou sans mots.
 - **Loto** : grilles de 4, 6 ou 9 cases, de 1 à 30 grilles, deux grilles par feuille A4.
   Une même image n’apparaît qu’une fois par grille. Les dispositions sont différentes
   entre les grilles. Le thème doit contenir au moins autant de cartes que de cases.
@@ -104,7 +130,7 @@ est disponible dans cette version locale ; il n'est pas encore ajouté au site e
 
 Tests réalisés sur Python 3.12 et Chromium sous Linux :
 
-- 15 tests Python : export/import, modification, redémarrage sur les données persistées,
+- 16 tests Python : export/import, modification, redémarrage sur les données persistées,
   validation des fichiers, refus des chemins dangereux, protection des écritures locales,
   conservation des archives corrompues et gestion des erreurs TTS.
 - 8 parcours de navigateur : création, MP3, sauvegarde, sept activités avec le nouveau
@@ -113,6 +139,9 @@ Tests réalisés sur Python 3.12 et Chromium sous Linux :
 - 6 contrôles supplémentaires : ouverture des deux thèmes fournis, affichage exact
   du nom Feelings, flashcards avec/sans mots, loto, validation des quantités et
   génération réelle de PDF A4 avec vérification du nombre de pages.
+- 6 contrôles de séance supplémentaires : PDF économique A4 (deux séries de 17 fruits),
+  24 séries sur 12 pages, sélection partagée par les sept jeux, persistance des liens/PDF
+  lecture réelle de MP3/vidéo locale et prise en compte de la sélection pour l’impression/loto.
 - 30 contrôles de non-régression sur les jeux et les médias fournis.
 
 La réponse audio TTS distante est simulée dans les tests déterministes ; l'appel réel
@@ -132,3 +161,8 @@ python local/server.py --no-browser --port 8092 --data-dir /tmp/english-local-te
 # Puis, dans un autre terminal avec Playwright et Chromium :
 node tests/local-browser.cjs
 ```
+
+L’atelier, les jeux, la préparation de séance et l’impression partagent une feuille de style commune.
+Les contrôles du TBI et le contraste élevé restent disponibles.
+Les tests `print-browser.cjs` et `session-browser.cjs` utilisent aussi les outils développeur
+`pdfinfo`, `pdftotext` et FFmpeg ; ces outils ne sont pas requis pour utiliser l’application.

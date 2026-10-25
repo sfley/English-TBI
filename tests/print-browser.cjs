@@ -23,6 +23,7 @@ const base=process.env.LOCAL_TEST_URL||'http://127.0.0.1:8092/';
   });
   const printHref=await page.locator('.theme-item').filter({has:page.locator('strong',{hasText:/^fruits$/})}).locator('a').filter({hasText:'Imprimer'}).getAttribute('href');
   await page.goto(new URL(printHref,base).href);await page.waitForFunction(()=>!document.querySelector('#print').disabled);
+  await page.selectOption('#layout','large');await page.locator('#generate').click();await page.waitForFunction(()=>!document.querySelector('#print').disabled);
   await check('flashcards : 17 cartes, 3 pages, PDF A4',async()=>{
    assert.equal(await page.locator('.tile').count(),17);assert.equal(await page.locator('.sheet').count(),3);assert.equal(await page.locator('.word').count(),17);
    const file='/tmp/english-flashcards-test.pdf';await page.pdf({path:file,preferCSSPageSize:true,printBackground:true,displayHeaderFooter:false});

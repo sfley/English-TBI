@@ -99,6 +99,11 @@
 
     host.appendChild(row);
     host.appendChild(select);
+    if (window.THEME_IDS?.[state.setKey]) {
+      const tid = window.THEME_IDS[state.setKey];
+      host.appendChild(el('a', {text:'Préparer la séance · '+state.cards.length+' cartes', attrs:{href:'/session.html?theme='+tid},className:'local-link'}));
+      host.appendChild(el('a', {text:'Imprimer cette sélection',attrs:{href:'/print.html?theme='+tid},className:'local-link'}));
+    }
 
     ensureAfterThemeDivider();
   }

@@ -72,7 +72,7 @@ async function loadCatalog(){
    if(model.dirty&&!confirm('Abandonner les modifications non enregistrées ?'))return;
    const data=await request('/api/themes/'+theme.id);model.id=data.id;model.cards=data.cards.map(c=>({label:c.label,image:c.image,audio:c.audio,audioLabel:c.label}));model.dirty=false;$('theme-name').value=data.name;$('credit').value=data.credit||'';$('editor-title').textContent='Modifier un thème';$('saved-state').textContent='Enregistré sur cet ordinateur';setPlayLink(data);render();message('Thème chargé.');
   });
-  const exp=document.createElement('a');exp.className='button';exp.textContent='Exporter';exp.href='/api/themes/'+theme.id+'/export';exp.download='theme.zip';const print=document.createElement('a');print.className='button';print.textContent='Imprimer';print.href='/print.html?theme='+theme.id;item.append(title,count,edit,exp,print);$('themes').append(item);
+  const exp=document.createElement('a');exp.className='button';exp.textContent='Exporter';exp.href='/api/themes/'+theme.id+'/export';exp.download='theme.zip';const print=document.createElement('a');print.className='button';print.textContent='Imprimer';print.href='/print.html?theme='+theme.id;const lesson=document.createElement('a');lesson.className='button';lesson.textContent='Séance et ressources';lesson.href='/session.html?theme='+theme.id;item.append(title,count,edit,lesson,exp,print);$('themes').append(item);
  }
  if(!result.themes.length)$('themes').textContent='Vos nouveaux thèmes apparaîtront ici. Les fruits et les animaux sont déjà disponibles dans les jeux.';
  message(result.warnings.join('\n'),!!result.warnings.length,'library-message');

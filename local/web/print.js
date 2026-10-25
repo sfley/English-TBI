@@ -12,8 +12,25 @@ async function generate(){
  if(!cards.length){status('Choisissez un thème.');return;}
  try{
   if($('kind').value==='cards'){
+   if($('layout').value==='class'){
+    const sets=Number($('sets').value);
+    if(!Number.isInteger(sets)||sets<1||sets>40)throw Error('Choisissez de 1 à 40 séries.');
+    const cols=6,rows=Math.ceil(cards.length/cols);
+    // Fit complete pupil sets on each sheet. Keep cards at least ~30 mm high.
+    const height=$('show-label').checked?38:32;
+    const perSheet=Math.max(1,Math.floor(254/(rows*height+5)));
+    for(let first=0;first<sets;first+=perSheet){
+     const page=sheet(Math.floor(first/perSheet)+1);page.classList.add('economy');
+     for(let k=first;k<Math.min(first+perSheet,sets);k++){
+      const set=document.createElement('section');set.className='pupil-set';set.style.height=(rows*height)+'mm';
+      const title=document.createElement('small');title.textContent='Série '+(k+1);set.append(title);
+      const g=grid(cols,rows);cards.forEach(c=>g.append(tile(c)));set.append(g);page.append(set);
+     }
+    }
+   }else{
    const n=Number($('per-page').value);const cols=n===2?1:2;
    for(let start=0;start<cards.length;start+=n){const page=sheet(start/n+1);const g=grid(cols,n/cols);cards.slice(start,start+n).forEach(c=>g.append(tile(c)));page.append(g);}
+   }
   }else{
    const [cols,rows]=$('grid-size').value.split(',').map(Number);const cells=cols*rows;
    const quantity=Number($('quantity').value);
@@ -32,7 +49,7 @@ async function generate(){
   if(run!==revision)return;$('print').disabled=false;status(`${document.querySelectorAll('.sheet').length} page(s) prête(s). Papier A4, portrait, échelle 100 %, sans en-têtes ni pieds de page du navigateur.`);
  }catch(e){if(run!==revision)return;$('preview').replaceChildren();status(e.message);}
 }
-async function loadTheme(){const loading=++loadRevision;invalidate();cards=[];name='';try{const response=await fetch('/api/themes/'+$('theme').value);if(!response.ok)throw Error('Thème indisponible.');const data=await response.json();if(loading!==loadRevision)return;cards=data.cards;name=data.name;await generate();}catch(e){status(e.message);}}
+async function loadTheme(){const loading=++loadRevision;invalidate();cards=[];name='';try{const response=await fetch('/api/themes/'+$('theme').value+'?selection=1');if(!response.ok)throw Error('Thème indisponible.');const data=await response.json();if(loading!==loadRevision)return;cards=data.cards;name=data.name;$('selection-note').textContent=cards.length+' cartes de la séance · modifiez la sélection dans « Séance et ressources ».';await generate();}catch(e){status(e.message);}}
 $('generate').onclick=generate;$('print').onclick=()=>window.print();$('theme').onchange=loadTheme;
-for(const id of ['kind','per-page','grid-size','quantity','show-label'])$(id).onchange=()=>{invalidate();const bingo=$('kind').value==='bingo';$('cards-settings').hidden=bingo;$('bingo-settings').hidden=!bingo;$('quantity-settings').hidden=!bingo;};
+for(const id of ['kind','layout','sets','per-page','grid-size','quantity','show-label'])$(id).onchange=()=>{invalidate();const bingo=$('kind').value==='bingo';$('cards-settings').hidden=bingo||$('layout').value==='class';$('layout-settings').hidden=bingo;$('sets-settings').hidden=bingo||$('layout').value!=='class';$('bingo-settings').hidden=!bingo;$('quantity-settings').hidden=!bingo;};
 (async()=>{try{const response=await fetch('/api/themes');if(!response.ok)throw Error('Atelier indisponible.');const data=await response.json();for(const t of data.themes){const opt=document.createElement('option');opt.value=t.id;opt.textContent=t.name;$('theme').append(opt);}const requested=new URLSearchParams(location.search).get('theme');if(data.themes.some(t=>t.id===requested))$('theme').value=requested;await loadTheme();}catch(e){status(e.message);}})();

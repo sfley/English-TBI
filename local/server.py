@@ -12,7 +12,7 @@ import secrets
 import tempfile
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlsplit, unquote
+from urllib.parse import urlsplit, unquote, parse_qs
 import uuid
 import unicodedata
 import webbrowser
@@ -354,6 +354,21 @@ class WorkshopServer(ThreadingHTTPServer):
             except (OSError, KeyError, ValueError, zipfile.BadZipFile):
                 self.migration_warnings.append(f'{file.name} : migration impossible, archive conservée.')
 
+    def session_data(self, tid):
+        self.path_for(tid).read_bytes()
+        file = self.data_dir/'seances'/(tid+'.json')
+        try:
+            data = json.loads(file.read_text(encoding='utf-8'))
+            if isinstance(data, dict): return data
+        except (OSError, ValueError): pass
+        return {'selected':None,'resources':[]}
+
+    def selected_cards(self, tid, cards):
+        selected = self.session_data(tid).get('selected')
+        if selected is None: return cards
+        filtered = [c for c in cards if c.get('file',c['id']) in selected]
+        return filtered if len(filtered) >= 2 else cards
+
     def catalog(self):
         themes, warnings = [], list(self.migration_warnings)
         valid = {m['id']:m for m in self.manifests()}
@@ -396,6 +411,14 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/themes':
                 themes, warnings = self.server.catalog()
                 return self.send({'themes':themes,'warnings':warnings})
+            if path.startswith('/api/lesson/'):
+                return self.send(self.server.session_data(path.split('/')[-1]))
+            if path.startswith('/resource/'):
+                _,_,tid,filename = path.split('/')
+                self.server.path_for(tid)
+                if not re.fullmatch(r'[a-f0-9]{32}\.(mp3|mp4|webm|ogg|pdf)',filename): raise ValueError('Fichier invalide.')
+                file = self.server.data_dir/'ressources'/tid/filename
+                return self.send(file.read_bytes(),mimetypes.guess_type(filename)[0] or 'application/octet-stream')
             if path.startswith('/api/themes/'):
                 parts = path.split('/')
                 tid = parts[3]
@@ -405,6 +428,8 @@ class Handler(BaseHTTPRequestHandler):
                 with zipfile.ZipFile(io.BytesIO(data)) as z:
                     m = json.loads(z.read('manifest.json'))
                     m['key'] = theme_key(m)
+                    if parse_qs(urlsplit(self.path).query).get('selection') == ['1']:
+                        m['cards'] = self.server.selected_cards(tid,m['cards'])
                     for card in m['cards']:
                         for key, mime in [('image','image/png'),('audio','audio/mpeg')]:
                             card[key] = f'data:{mime};base64,'+base64.b64encode(z.read(card[key])).decode()
@@ -416,7 +441,15 @@ class Handler(BaseHTTPRequestHandler):
                 with zipfile.ZipFile(self.server.path_for(tid)) as z: data=z.read(kind+'/'+asset)
                 return self.send(data, 'image/png' if kind=='images' else 'audio/mpeg')
             if path == '/app/cards.js':
-                return self.send(self.server.cards_file.read_bytes(), 'text/javascript; charset=utf-8')
+                script = self.server.cards_file.read_text(encoding='utf-8')
+                ids = {}
+                for m in self.server.manifests():
+                    key = theme_key(m)
+                    ids[key] = m['id']
+                    labels = [c['id'] for c in self.server.selected_cards(m['id'],m['cards'])]
+                    script += '\nwindow.CARD_SETS['+json.dumps(key)+'] = window.CARD_SETS['+json.dumps(key)+'].filter(c => '+json.dumps(labels)+'.includes(c.id));'
+                script += '\nwindow.THEME_IDS = '+json.dumps(ids)+';'
+                return self.send(script, 'text/javascript; charset=utf-8')
             if path in ['/', '/index.html']:
                 file=ROOT/'local/web/index.html'
             elif path.startswith('/app/'):
@@ -433,12 +466,15 @@ class Handler(BaseHTTPRequestHandler):
                 resolved = file.relative_to(ROOT).as_posix()
                 if not (resolved in ['index.html','styles.css','cards.js'] or any(file.is_relative_to(ROOT/d) for d in ['js','audio','flashcards'])):
                     raise ValueError('Chemin interdit.')
-            elif path in ['/atelier.js','/atelier.css','/print.html','/print.js','/print.css']:
+            elif path in ['/atelier.js','/atelier.css','/print.html','/print.js','/print.css','/session.html','/session.js','/common.css']:
                 file=ROOT/'local/web'/path[1:]
             elif path=='/favicon.ico': return self.send(b'',status=204)
             else: return self.send({'error':'Page introuvable.'},status=404)
             data=file.read_bytes()
+            if file.suffix == '.html':
+                data=data.replace(b'</head>',b'<link rel="stylesheet" href="/common.css"></head>')
             if path in ['/app/','/app/index.html']:
+                data=data.replace(b'<body>',b'<body class="local-app">')
                 data=data.replace(b'</header>', b'<p><a href="/" style="color:inherit">Atelier de th\xc3\xa8mes</a></p></header>',1)
             mime = {'.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8',
                     '.html':'text/html; charset=utf-8','.png':'image/png','.mp3':'audio/mpeg'}.get(file.suffix.lower())
@@ -454,6 +490,43 @@ class Handler(BaseHTTPRequestHandler):
             if not 0 < length <= MAX_BODY: raise ValueError('Envoi vide ou trop volumineux (64 Mo maximum).')
             raw=self.rfile.read(length)
             path=urlsplit(self.path).path
+            if path in ['/api/lesson','/api/resource']:
+                query=parse_qs(urlsplit(self.path).query)
+                tid=query.get('theme',[''])[0]
+                self.server.path_for(tid).read_bytes()
+                with self.server.write_lock:
+                    data=self.server.session_data(tid)
+                    if path=='/api/lesson':
+                        incoming=json.loads(raw)
+                        selected=incoming.get('selected')
+                        if selected is not None and (not isinstance(selected,list) or len(selected)<2 or any(not isinstance(x,str) for x in selected)):
+                            raise ValueError('Choisissez au moins deux cartes.')
+                        with zipfile.ZipFile(self.server.path_for(tid)) as archive:
+                            valid={c.get('file',c['id']) for c in json.loads(archive.read('manifest.json'))['cards']}
+                        if selected is not None and not set(selected)<=valid: raise ValueError('Cartes inconnues.')
+                        data['selected']=selected
+                    else:
+                        title=text(query.get('title',[''])[0],120,'Titre')
+                        kind=query.get('kind',[''])[0]
+                        if kind not in ['song','video','game','prep','other']: raise ValueError('Catégorie invalide.')
+                        if query.get('mode')==['link']:
+                            url=raw.decode('utf-8').strip()
+                            parsed=urlsplit(url)
+                            if parsed.scheme not in ['https','http'] or not parsed.hostname or parsed.username or parsed.password: raise ValueError('Indiquez un lien HTTP ou HTTPS valide.')
+                        else:
+                            ext=query.get('ext',[''])[0].lower()
+                            if ext not in ['mp3','mp4','webm','ogg','pdf']: raise ValueError('Choisissez un MP3, MP4, WebM, OGG ou PDF.')
+                            if ext=='mp3':check_audio(raw)
+                            if ext=='pdf' and not raw.startswith(b'%PDF-'):raise ValueError('PDF invalide.')
+                            if ext=='mp4' and raw[4:8]!=b'ftyp':raise ValueError('MP4 invalide.')
+                            if ext=='webm' and not raw.startswith(b'\x1a\x45\xdf\xa3'):raise ValueError('WebM invalide.')
+                            if ext=='ogg' and not raw.startswith(b'OggS'):raise ValueError('OGG invalide.')
+                            filename=uuid.uuid4().hex+'.'+ext
+                            atomic_files({self.server.data_dir/'ressources'/tid/filename:raw})
+                            url='/resource/'+tid+'/'+filename
+                        data.setdefault('resources',[]).append({'title':title,'kind':kind,'url':url,'local':url.startswith('/resource/'),'notes':query.get('notes',[''])[0][:2000]})
+                    atomic_files({self.server.data_dir/'seances'/(tid+'.json'):json.dumps(data,ensure_ascii=False).encode()})
+                return self.send(data)
             if path=='/api/import':
                 manifest,data=read_pack(raw)
                 # Never silently overwrite an existing theme, even when importing its backup.
