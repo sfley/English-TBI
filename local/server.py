@@ -22,6 +22,7 @@ from PIL import Image, ImageOps
 from mutagen.mp3 import MP3
 from mutagen import MutagenError
 from image_tools import calc_size_contain
+from curriculum import Curriculum
 
 ROOT = Path(__file__).resolve().parent.parent
 MAX_BODY = 64 * 1024 * 1024
@@ -213,8 +214,10 @@ class WorkshopServer(ThreadingHTTPServer):
         self.write_lock = threading.Lock()
         self.tts_lock = threading.Lock()
         self.migration_warnings = []
+        self.curriculum = Curriculum(self, build_pack, atomic_files)
         self.seed_builtin_themes()
         self.migrate_themes()
+        self.curriculum.migrate_legacy()
         super().__init__(('127.0.0.1', port), Handler)
 
     def seed_builtin_themes(self):
@@ -408,6 +411,11 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == '/api/session':
                 return self.send({'token':self.server.token})
+            if path == '/api/curriculum':
+                return self.send(self.server.curriculum.listing())
+            if path.startswith('/api/curriculum/'):
+                _,_,_,kind,ident = path.split('/')
+                return self.send(self.server.curriculum.detail(ident) if kind=='lessons' else self.server.curriculum.get(kind,ident))
             if path == '/api/themes':
                 themes, warnings = self.server.catalog()
                 return self.send({'themes':themes,'warnings':warnings})
@@ -441,6 +449,12 @@ class Handler(BaseHTTPRequestHandler):
                 with zipfile.ZipFile(self.server.path_for(tid)) as z: data=z.read(kind+'/'+asset)
                 return self.send(data, 'image/png' if kind=='images' else 'audio/mpeg')
             if path == '/app/cards.js':
+                lesson_id=parse_qs(urlsplit(self.path).query).get('lesson',[None])[0]
+                if lesson_id:
+                    lesson=self.server.curriculum.detail(lesson_id)
+                    key=lesson['key']
+                    cards=[{'id':c['id'],'label':c['label'],'img':c['image'],'audio':c['audio']} for c in lesson['cards']]
+                    return self.send('window.CARD_SETS = '+json.dumps({key:cards})+';window.DEFAULT_CONFIG = '+json.dumps({'set':key})+';window.ACTIVE_LESSON = '+json.dumps({k:lesson[k] for k in ['id','title','key','sequence_id','card_count']})+';', 'text/javascript; charset=utf-8')
                 script = self.server.cards_file.read_text(encoding='utf-8')
                 ids = {}
                 for m in self.server.manifests():
@@ -451,7 +465,7 @@ class Handler(BaseHTTPRequestHandler):
                 script += '\nwindow.THEME_IDS = '+json.dumps(ids)+';'
                 return self.send(script, 'text/javascript; charset=utf-8')
             if path in ['/', '/index.html']:
-                file=ROOT/'local/web/index.html'
+                file=ROOT/'local/web/home.html'
             elif path.startswith('/app/'):
                 rel=path[5:] or 'index.html'
                 if not (rel in ['index.html','styles.css','cards.js'] or rel.startswith(('js/','audio/','flashcards/'))):
@@ -466,14 +480,18 @@ class Handler(BaseHTTPRequestHandler):
                 resolved = file.relative_to(ROOT).as_posix()
                 if not (resolved in ['index.html','styles.css','cards.js'] or any(file.is_relative_to(ROOT/d) for d in ['js','audio','flashcards'])):
                     raise ValueError('Chemin interdit.')
-            elif path in ['/atelier.js','/atelier.css','/print.html','/print.js','/print.css','/session.html','/session.js','/common.css','/navigation.js']:
-                file=ROOT/'local/web'/path[1:]
+            elif path in ['/atelier.js','/atelier.css','/print.html','/print.js','/print.css','/session.html','/session.js','/common.css','/navigation.js','/home.js','/home.html','/lesson.html','/lesson.js','/sequence.html','/sequence.js','/run.html','/run.js','/curriculum-ui.js','/themes.html']:
+                file=ROOT/'local/web'/('index.html' if path=='/themes.html' else path[1:])
             elif path=='/favicon.ico': return self.send(b'',status=204)
             else: return self.send({'error':'Page introuvable.'},status=404)
             data=file.read_bytes()
             if file.suffix == '.html':
                 data=data.replace(b'</head>',b'<link rel="stylesheet" href="/common.css"><script src="/navigation.js" defer></script></head>')
             if path in ['/app/','/app/index.html']:
+                lesson=parse_qs(urlsplit(self.path).query).get('lesson',[None])[0]
+                if lesson:
+                    self.server.curriculum.get('lessons',lesson)
+                    data=data.replace(b'src="cards.js"', ('src="cards.js?lesson='+lesson+'"').encode())
                 data=data.replace(b'<body>',b'<body class="local-app">')
                 data=data.replace(b'</header>', b'<p><a href="/" style="color:inherit">Atelier de th\xc3\xa8mes</a></p></header>',1)
             mime = {'.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8',
@@ -490,6 +508,14 @@ class Handler(BaseHTTPRequestHandler):
             if not 0 < length <= MAX_BODY: raise ValueError('Envoi vide ou trop volumineux (64 Mo maximum).')
             raw=self.rfile.read(length)
             path=urlsplit(self.path).path
+            if path.startswith('/api/curriculum/'):
+                kind=path.rsplit('/',1)[-1]
+                with self.server.write_lock:
+                    payload=json.loads(raw)
+                    if kind=='duplicate':result=self.server.curriculum.duplicate(payload['id'])
+                    elif kind=='reorder':result=self.server.curriculum.reorder(payload.get('sequence_id'),payload.get('ids'))
+                    else:result=self.server.curriculum.save(kind,payload)
+                return self.send(result)
             if path in ['/api/lesson','/api/resource']:
                 query=parse_qs(urlsplit(self.path).query)
                 tid=query.get('theme',[''])[0]
@@ -558,7 +584,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send({'error':'La voix n’a pas pu être générée. Vérifiez Internet ou importez un MP3. Vos cartes restent dans l’atelier.'},status=502)
                 finally: self.server.tts_lock.release()
             return self.send({'error':'Action inconnue.'},status=404)
-        except (ValueError, TypeError, AttributeError, json.JSONDecodeError) as exc:
+        except (ValueError, TypeError, AttributeError, KeyError, json.JSONDecodeError) as exc:
             return self.send({'error':str(exc)},status=400)
         except OSError:
             return self.send({'error':'Écriture impossible. Vérifiez l’espace disque et les droits du dossier donnees_locales.'},status=500)

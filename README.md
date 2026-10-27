@@ -1,6 +1,6 @@
 # Version locale Windows
 
-Commencez par [VERSION_LOCALE.md](VERSION_LOCALE.md), puis double-cliquez sur **DEMARRER.bat** dans le dossier extrait. Cette branche contient l’atelier local et les sept activités.
+Commencez par [VERSION_LOCALE.md](VERSION_LOCALE.md), puis double-cliquez sur **DEMARRER.bat** dans le dossier extrait. Cette branche contient l’accueil des séquences et séances enregistrées, l’éditeur de thèmes, les sept activités et les impressions. La version locale 2.0 conserve une copie des cartes et sons dans chaque séance préparée.
 
 ---
 

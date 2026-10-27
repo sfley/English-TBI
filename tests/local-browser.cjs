@@ -9,7 +9,7 @@ const base=process.env.LOCAL_TEST_URL||'http://127.0.0.1:8092/';
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  let count=0;async function check(name,fn){await fn();count++;console.log('PASS '+name);}
  try{
-  await page.goto(base);await page.waitForSelector('#themes');await page.waitForSelector('#app-navigation');await page.waitForFunction(()=>document.querySelector('#theme-name').value.length>0);await page.locator('#new-theme').click();
+  await page.goto(base+'themes.html');await page.waitForSelector('#themes');await page.waitForSelector('#app-navigation');await page.waitForFunction(()=>document.querySelector('#theme-name').value.length>0);await page.locator('#new-theme').click();
   await check('création par images et erreur sans son',async()=>{
    await page.locator('#theme-name').fill('School supplies browser');
    await page.locator('#add-images').setInputFiles(['flashcards/fruits/apple.png','flashcards/fruits/banana.png']);

@@ -8,7 +8,7 @@ const base=process.env.LOCAL_TEST_URL||'http://127.0.0.1:8092/';
  const page=await browser.newPage({viewport:{width:1400,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
  let count=0;async function check(name,fn){await fn();count++;console.log('PASS '+name);}
  try{
-  await page.goto(base);await page.waitForFunction(()=>document.querySelectorAll('.theme-item').length>=2);
+  await page.goto(base+'themes.html');await page.waitForFunction(()=>document.querySelectorAll('.theme-item').length>=2);
   await check('deux thèmes fournis modifiables dans l’atelier',async()=>{
    for(const [name,size] of [['fruits',17],['wild animals',13]]){
     await page.locator('.theme-item').filter({has:page.locator('strong',{hasText:new RegExp('^'+name+'$')})}).locator('button').click();

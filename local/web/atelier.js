@@ -72,11 +72,11 @@ async function loadCatalog(){
    if(model.dirty&&!confirm('Abandonner les modifications non enregistrées ?'))return;
    const data=await request('/api/themes/'+theme.id);model.id=data.id;model.cards=data.cards.map(c=>({label:c.label,image:c.image,audio:c.audio,audioLabel:c.label}));model.dirty=false;$('theme-name').value=data.name;$('credit').value=data.credit||'';$('editor-title').textContent='Modifier un thème';$('saved-state').textContent='Enregistré sur cet ordinateur';setPlayLink(data);render();message('Thème chargé.');
   });
-  const exp=document.createElement('a');exp.className='button';exp.textContent='Exporter';exp.href='/api/themes/'+theme.id+'/export';exp.download='theme.zip';const print=document.createElement('a');print.className='button';print.textContent='Imprimer';print.href='/print.html?theme='+theme.id;const lesson=document.createElement('a');lesson.className='button';lesson.textContent='Séance et ressources';lesson.href='/session.html?theme='+theme.id;item.append(title,count,edit,lesson,exp,print);$('themes').append(item);
+  const exp=document.createElement('a');exp.className='button';exp.textContent='Exporter';exp.href='/api/themes/'+theme.id+'/export';exp.download='theme.zip';const print=document.createElement('a');print.className='button';print.textContent='Imprimer';print.href='/print.html?theme='+theme.id;const lesson=document.createElement('a');lesson.className='button';lesson.textContent='Créer une séance';lesson.href='/lesson.html?theme='+theme.id;item.append(title,count,edit,lesson,exp,print);$('themes').append(item);
  }
  if(!result.themes.length)$('themes').textContent='Vos nouveaux thèmes apparaîtront ici. Les fruits et les animaux sont déjà disponibles dans les jeux.';
  message(result.warnings.join('\n'),!!result.warnings.length,'library-message');
- if(!model.id&&!model.dirty){let requested=new URLSearchParams(location.search).get('theme');try{requested=requested||sessionStorage.getItem('active-theme');}catch{}const button=[...document.querySelectorAll('[data-edit-theme]')].find(e=>e.dataset.editTheme===requested);if(button)setTimeout(()=>button.click(),0);}
+ if(!model.id&&!model.dirty){let requested=new URLSearchParams(location.search).get('theme');try{requested=requested||sessionStorage.getItem('active-theme');}catch{}requested=requested||result.themes[0]?.id;const button=[...document.querySelectorAll('[data-edit-theme]')].find(e=>e.dataset.editTheme===requested);if(button)setTimeout(()=>button.click(),0);}
 }
 function setPlayLink(theme){window.dispatchEvent(new CustomEvent('themechange',{detail:theme}));$('play-theme').href='/app/?theme='+encodeURIComponent(theme.key);$('play-theme').hidden=false;}
 async function save(){

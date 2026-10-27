@@ -1,191 +1,140 @@
-# English TBI local — Windows
+# English TBI local — version 2.0 pour Windows
 
-Cette version réunit les sept activités et un atelier visuel de création de thèmes.
-Aucun Git, Flask, compte ou jeton n'est nécessaire sur votre ordinateur.
-Le site déjà publié sur La Forge reste utilisable indépendamment.
+L’accueil présente vos **séquences** et vos **séances enregistrées**. Les thèmes sont
+la réserve de cartes ; chaque séance enregistre les cartes précises qu’elle utilise.
+Aucun Git, compte ou jeton n’est nécessaire sur le PC.
 
-## Navigation — version locale 1.4
+## Installer ou mettre à jour
 
-La barre commune **Préparer · Jouer · Imprimer** garde le thème choisi et indique
-le nombre de cartes de la séance. **Préparer** regroupe deux rubriques : thèmes/cartes
-et séance/ressources. Le dernier thème est conservé dans l’onglet du navigateur ;
-les sélections de cartes restent sauvegardées sur disque. Si le stockage du navigateur
-est bloqué, les liens continuent à transporter explicitement le thème choisi.
+1. Téléchargez le ZIP, puis clic droit > **Extraire tout**.
+2. Pour une mise à jour, fermez l’ancienne application et copiez son dossier
+   **donnees_locales** dans le nouveau dossier, à côté de **DEMARRER.bat**.
+   Gardez l’ancien dossier jusqu’à vérification. Ne copiez pas son `.venv`.
+3. Double-cliquez sur **DEMARRER.bat**. Python 3.10 ou plus doit être installé.
+   Si nécessaire : https://www.python.org/downloads/windows/ ; sur un PC administré,
+   demandez l’installation au responsable informatique.
+4. Le premier lancement installe les dépendances dans `.venv` (Internet nécessaire).
+   Le navigateur s’ouvre ensuite sur l’accueil. Laissez la fenêtre du lanceur ouverte.
 
-Dans **Jouer**, la colonne latérale est remplacée par une barre compacte.
-Le nom de l’activité ouvre la liste des sept jeux. **Réglages** regroupe les options
-de l’activité, le mode TBI et le contraste élevé. Les boutons de lecture utiles
-et **Recommencer** restent sous les cartes. Les cartes s’adaptent à l’espace disponible ;
-le choix manuel du nombre de colonnes reste accessible dans les réglages.
-En plein écran, la navigation se replie ; le bouton **Menu** permet de la retrouver.
-Une modification non enregistrée dans l’éditeur déclenche une confirmation avant
-le changement de module.
+Les anciennes sélections et ressources enregistrées par thème sont récupérées comme
+**séances indépendantes** portant la mention « Séance récupérée ». Les anciens fichiers
+restent intacts. Vos thèmes, images et sons sont conservés.
 
-La nouvelle suite `tests/navigation-browser.cjs` vérifie le cycle complet entre les
-modules, la sélection conservée, les sept activités, le redémarrage, les réglages,
-le plein écran et la protection des modifications non enregistrées. Exécutez-la
-sur des données de test fraîches : les autres suites peuvent renommer un thème.
+## Préparer une séquence
 
-## Premier démarrage
+Cliquez sur **Nouvelle séquence**. Renseignez le titre, le niveau, l’objectif commun,
+les notes et l’état : **À préparer · Prête · Réalisée**. Ajoutez si besoin des ressources
+communes, puis enregistrez. Vous retrouvez la séquence sur l’accueil.
 
-1. Téléchargez le ZIP de la version locale, puis faites clic droit > **Extraire tout**.
-2. Ouvrez le dossier extrait et double-cliquez sur **DEMARRER.bat**.
-3. Si Python manque, installez Python 3.10 ou plus depuis
-   https://www.python.org/downloads/windows/ puis relancez **DEMARRER.bat**.
-   Sur un ordinateur administré par l'école, demandez l'installation à son responsable.
-4. Au premier lancement, le programme installe ses dépendances dans le sous-dossier
-   `.venv` : Internet est nécessaire. L'atelier s'ouvre ensuite dans votre navigateur.
-   Si le navigateur ne s'ouvre pas, l'adresse est indiquée dans la fenêtre du lanceur.
+Depuis sa carte, **Ajouter une séance** crée une séance rattachée. Les flèches ↑ ↓
+permettent de réordonner les séances. Le numéro d’ordre est également modifiable
+sur la fiche de séance. **Modifier la séquence** permet de reprendre ses informations.
 
-Gardez la fenêtre du lanceur ouverte pendant l'utilisation. Fermez-la pour arrêter.
-L'application est accessible uniquement depuis cet ordinateur (adresse 127.0.0.1).
-L'adresse utilise un port disponible ; lancez une seule instance à la fois.
-Ne lancez pas le programme depuis l'intérieur du ZIP et ne déplacez pas les fichiers
-séparément. Le dossier doit être accessible en écriture.
+## Préparer une séance
 
-## Mettre à jour une première version locale
+Une séance peut appartenir à une séquence ou rester indépendante pour un rituel ponctuel.
+Donnez-lui un nom, un objectif, une consigne, une durée indicative et un état.
 
-Fermez l’atelier, extrayez le nouveau ZIP dans un nouveau dossier et copiez le dossier
-**donnees_locales** de l’ancienne version à côté du nouveau **DEMARRER.bat**, puis lancez-le.
-Gardez l’ancien dossier jusqu’à vérification de vos thèmes. Les images et sons sont
-recréés au bon endroit à partir des ZIP conservés. Ne copiez pas l’ancien dossier `.venv`.
+- Ajoutez un ou plusieurs thèmes et cochez les mots retenus (2 à 60 cartes au total).
+- **Choisir ce nombre** sélectionne des cartes à la préparation, pas au lancement.
+- Ajoutez les ressources de la séance et réordonnez-les avec les flèches.
+- Cliquez sur **Enregistrer la séance** : elle apparaît sur l’accueil.
+- **Dupliquer** crée une copie avec ses cartes et ses ressources, que vous pouvez adapter.
 
-## Préparer un thème
+Les images et les sons sont copiés dans un instantané propre à la séance.
+Modifier un thème ensuite ne change pas une séance déjà prête. Pour reprendre
+volontairement les nouvelles images et les nouveaux sons, cochez **Actualiser…**
+sur la fiche. Si une carte a été retirée du thème, l’éditeur l’indique et refuse
+une actualisation impossible ; l’ancienne séance demeure utilisable.
 
-1. Donnez un nom au thème et choisissez l'anglais britannique ou américain.
-2. Choisissez ou déposez des images PNG, JPEG ou WebP. Leur nom propose le mot anglais.
-3. Corrigez les mots et indiquez les sources/droits des ressources.
-4. Cliquez sur **Générer les sons manquants**, ou importez un MP3 pour chaque carte.
-   Vous pouvez régénérer un seul mot et écouter chaque son avant validation.
-5. Cliquez sur **Enregistrer le thème**, puis **Jouer avec ce thème**.
+Une modification non enregistrée déclenche une confirmation avant de quitter la fiche.
 
-Prévoyez de 2 à 60 cartes, chacune avec un mot, une image et un MP3.
-La valeur de chaque fichier est limitée à 8 Mo. Les images sont copiées,
-réorientées et normalisées en PNG 187 × 187 ; les fichiers d'origine restent intacts.
-La méthode de cadrage reprend celle de votre générateur Python initial.
-Changer le mot invalide son ancien son pour éviter les associations incorrectes.
-Changer la voix ne régénère pas les sons existants : utilisez le bouton de la carte.
+## Faire classe
 
-Les sons sont générés par gTTS via Google Translate. Les mots sont donc envoyés à ce
-service, sans clé ni compte. Une connexion Internet est nécessaire pour cette action.
-Le service peut être indisponible ou limité. En cas d'erreur, vos cartes restent dans
-l'atelier ; vous pouvez réessayer plus tard ou fournir vos MP3. Les requêtes HTTPS
-conservent la vérification des certificats.
+Sur l’accueil, **Lancer** ouvre la séance : consigne, aperçu des cartes, sept activités,
+ressources communes de la séquence et ressources de la séance dans l’ordre choisi.
 
-Les fruits et les animaux fournis, ainsi que les thèmes enregistrés avec leurs sons,
-sont utilisables hors connexion après la première installation.
+Le jeu utilise exactement les cartes enregistrées. **Retour à ma séance** retrouve
+la fiche et son rituel ; celle-ci permet de retourner à la séquence ou à l’accueil.
+Les boutons **Préparer · Jouer · Imprimer** conservent le contexte de la séance.
 
-## Retrouver et modifier les thèmes fournis
+Dans les jeux, la barre d’activité est compacte et **Réglages** ouvre un panneau
+centré, contenu dans l’écran et défilant si nécessaire. Les réglages d’affichage,
+le contraste élevé, **Recommencer**, les commandes sonores et le plein écran restent
+accessibles. Le panneau se repositionne aussi lorsque la fenêtre est redimensionnée.
+En plein écran, **Menu** permet de retrouver la navigation principale.
 
-**fruits** et **wild animals** apparaissent automatiquement dans « Mes thèmes » avec
-leurs images et leurs sons. Cliquez sur **Modifier** pour les ouvrir dans l’éditeur.
-Leurs ZIP d’origine sont conservés dans **donnees_locales/originaux/**.
-Le nom affiché dans les jeux et sur les impressions est exactement celui choisi
-(par exemple **Feelings**), sans préfixe « Local » ni identifiant ajouté.
+## Chansons, vidéos, jeux et fiches de préparation
 
-## Séance et ressources
+Ajoutez des liens HTTP/HTTPS ou des fichiers MP3, MP4, WebM, OGG et PDF (64 Mo maximum).
+Donnez un titre et une catégorie à chaque ressource. Vous pouvez reprendre une ressource
+déjà associée à un thème, ou en ajouter une nouvelle. Les flèches définissent l’ordre.
+Les fichiers locaux ne démarrent pas automatiquement ; un changement de page arrête
+la lecture. Les liens Internet s’ouvrent dans un nouvel onglet à votre demande.
+Préférez MP3 et MP4 H.264/AAC pour la compatibilité entre navigateurs.
 
-Le bouton **Séance et ressources** de chaque thème permet de choisir un nombre de
-cartes, ou de cocher précisément les mots souhaités. Cliquez sur **Utiliser cette sélection**.
-La sélection est enregistrée sur disque et partagée par les sept jeux et les impressions.
-Le thème complet reste intact. Rechargez les onglets des jeux/impressions déjà ouverts
-pour appliquer la nouvelle sélection. **Toutes les cartes**, puis **Utiliser cette sélection**,
-permet de revenir au thème entier. Deux cartes minimum sont nécessaires.
+## Imprimer
 
-Vous pouvez associer au même thème des chansons, vidéos, jeux en ligne, fiches de
-préparation/de séance et autres ressources, avec un titre et des notes/source.
-Les liens HTTP/HTTPS s’ouvrent dans un nouvel onglet sur demande. Les fichiers locaux
-acceptés sont MP3, MP4, WebM, OGG et PDF, jusqu’à 64 Mo. Les sons/vidéos ne démarrent
-pas automatiquement et s’arrêtent au changement de thème ou au départ de la page.
-Certains codecs peuvent dépendre de votre navigateur ; préférez MP3 et MP4 H.264/AAC.
+Depuis une séance, **Imprimer** reprend ses cartes enregistrées.
+Vous pouvez également accéder à **Mes thèmes**, puis imprimer un thème librement.
 
-Les sélections sont enregistrées sous **donnees_locales/seances/**, et les fichiers
-supplémentaires sous **donnees_locales/ressources/**. Sauvegardez **donnees_locales**
-en entier pour les transporter : le ZIP exporté d’un thème contient ses cartes et leurs
-sons, mais pas les ressources de rituel ni les sélections de séance.
+- **Planche économique élèves** : six colonnes, de 1 à 40 séries. Trois séries de
+  18 cartes tiennent sur une A4 avec des marges hautes/basses de 5 mm. Pour les 17 fruits,
+  24 élèves donnent 8 feuilles. Les mots sont facultatifs.
+- **Grandes cartes collectives** : 2, 4, 6 ou 8 cartes par A4.
+- **Loto** : de 1 à 30 grilles, avec 4, 6 ou 9 cases ; deux grilles par A4.
+  La séance doit contenir au moins autant de cartes que de cases.
 
-## Flashcards et grilles de loto à imprimer
+Choisissez **Préparer les pages**, puis **Imprimer / Enregistrer en PDF**.
+Réglages navigateur : A4 portrait, échelle 100 %, sans en-têtes ni pieds de page.
 
-Dans « Mes thèmes », cliquez sur **Imprimer** à côté du thème souhaité.
+## Ajouter ou modifier des thèmes
 
-- **Flashcards élèves — planche économique** : six colonnes de petites cartes,
-  séries complètes regroupées sur les feuilles. Choisissez de 1 à 40 séries (par exemple
-  le nombre d’élèves). Avec les 17 fruits, trois séries tiennent sur une seule feuille A4,
-  avec des marges hautes et basses de 5 mm : 24 élèves donnent 8 feuilles au lieu de 72 en grandes cartes.
-  Une série de 18 cartes tient également trois fois sur une A4 (54 petites cartes).
-  Les contours discrets aident à la découpe. Les mots sont facultatifs.
-- **Grandes cartes collectives** : 2, 4, 6 ou 8 cartes par feuille A4, avec ou sans mots.
-- **Loto** : grilles de 4, 6 ou 9 cases, de 1 à 30 grilles, deux grilles par feuille A4.
-  Une même image n’apparaît qu’une fois par grille. Les dispositions sont différentes
-  entre les grilles. Le thème doit contenir au moins autant de cartes que de cases.
-- Cliquez sur **Préparer les pages**, puis sur **Imprimer / Enregistrer en PDF**.
-- Dans le dialogue du navigateur : A4, portrait, échelle 100 %, sans les en-têtes
-  ni les pieds de page du navigateur. Pour le loto, les flashcards du thème servent
-  de cartes d’appel ou de pioche.
+**Mes thèmes** ouvre l’éditeur des fruits, animaux et thèmes personnels.
+Ajoutez des images PNG/JPEG/WebP, vérifiez les mots puis générez les voix via gTTS,
+ou importez les MP3. La génération vocale utilise Internet et envoie les mots à
+Google Translate, sans compte ni clé. Chaque voix peut être réécoutée et régénérée.
+Les requêtes HTTPS conservent la vérification des certificats. En cas d’indisponibilité,
+vos cartes restent dans l’éditeur ; vous pouvez réessayer ou importer vos MP3.
 
-Les images et les fichiers d’impression restent sur votre ordinateur. Les PDF
-sont enregistrés à l’endroit choisi dans le dialogue d’impression du navigateur.
+À l’enregistrement, les images sont copiées en PNG **187 × 187**, sans déformation,
+dans `flashcards/nom-du-theme/`, les sons dans `audio/nom-du-theme/`, et `cards.js`
+est actualisé. Les originaux fournis et les anciennes archives sont sauvegardés
+sous `donnees_locales/originaux/` et `donnees_locales/avant_migration_187/`.
 
-## Enregistrer, exporter, transporter
+L’export/import ZIP des thèmes reste disponible. Il transporte le vocabulaire,
+les images et les sons du thème ; il ne transporte pas une séquence ou ses séances.
 
-- Les images sont enregistrées dans **flashcards/nom-du-theme/** et les MP3 dans
-  **audio/nom-du-theme/**, comme les thèmes fournis. Par exemple :
-  `flashcards/school-supplies/pencil.png` et `audio/school-supplies/pencil.mp3`.
-- **cards.js** est mis à jour automatiquement pour que le thème soit aussi disponible
-  en ouvrant directement `index.html`. Le nom du dossier reste stable si le thème est renommé.
-- Les ZIP de sauvegarde et les métadonnées de l’atelier restent dans **donnees_locales**.
-- Les anciens thèmes locaux sont convertis en 187 × 187 au démarrage ; leurs ZIP
-  originaux sont conservés dans **donnees_locales/avant_migration_187/**.
-- Un dossier existant n’est pas écrasé : un suffixe est ajouté si nécessaire.
-- **Exporter en ZIP** permet d'obtenir une sauvegarde ou de transporter un thème.
-- Sur un autre ordinateur équipé de la version locale, **Importer un thème ZIP**
-  ajoute ce thème. L'import crée une copie et n'écrase pas les thèmes existants.
-- Pour une sauvegarde complète, copiez le dossier complet de l’application sur un autre support (ou exportez chaque thème en ZIP).
-- Une erreur d'import ou de génération ne supprime pas les thèmes déjà enregistrés.
-- Les modifications en cours ne sont conservées qu'après **Enregistrer le thème**.
-  Une confirmation vous protège lorsque vous quittez une fiche modifiée.
+## Sauvegarder et transférer
 
-Le ZIP exporté utilise un format dédié : `manifest.json`, `images/` et `audio/`.
-Il ne s'agit pas de l'archive `english.zip` d'origine. L'import des nouveaux thèmes
-est disponible dans cette version locale ; il n'est pas encore ajouté au site en ligne.
+Sauvegardez **donnees_locales en entier** : il contient les thèmes, les fichiers de
+ressources et les préparations. Les séquences et séances sont sous **progressions/**,
+avec leurs instantanés de cartes sous **progressions/snapshots/**.
+
+Pour transférer votre travail, copiez ce dossier complet à côté de DEMARRER.bat dans
+une autre installation de cette version. N’assemblez pas deux dossiers de travail
+sans sauvegarde préalable : des fichiers de même nom peuvent correspondre au même objet.
+Le site déjà publié sur La Forge reste indépendant de cette version locale.
 
 ## Validation et limites
 
-Tests réalisés sur Python 3.12 et Chromium sous Linux :
+Vérifications sous Python 3.12 et Chromium sur Linux :
 
-- 16 tests Python : export/import, modification, redémarrage sur les données persistées,
-  validation des fichiers, refus des chemins dangereux, protection des écritures locales,
-  conservation des archives corrompues et gestion des erreurs TTS.
-- 8 parcours de navigateur : création, MP3, sauvegarde, sept activités avec le nouveau
-  thème, téléchargement réel du ZIP, import sans écrasement, rechargement, modification,
-  erreur réseau et génération par lot avec réponse distante simulée.
-- 6 contrôles supplémentaires : ouverture des deux thèmes fournis, affichage exact
-  du nom Feelings, flashcards avec/sans mots, loto, validation des quantités et
-  génération réelle de PDF A4 avec vérification du nombre de pages.
-- 6 contrôles de séance supplémentaires : PDF économique A4 (deux séries de 17 fruits),
-  24 séries sur 8 pages, sélection partagée par les sept jeux, persistance des liens/PDF
-  lecture réelle de MP3/vidéo locale et prise en compte de la sélection pour l’impression/loto.
-- 30 contrôles de non-régression sur les jeux et les médias fournis.
+- 21 tests Python : thèmes et ZIP, séquences et séances, ordre, duplication,
+  plusieurs thèmes, persistance au redémarrage, reprise des anciennes préparations,
+  protection des instantanés après modification d’un thème et validation des données.
+- Parcours navigateur : création de séquence et de séance nommée, six cartes précises,
+  ressource de rituel, lancement, panneau Réglages à 1366 × 768 et 640 × 600,
+  retour à la séance, impression, duplication, réordonnancement et protection des saisies.
+- Suites existantes de l’éditeur, des médias, des flashcards/loto et du jeu libre.
 
-La réponse audio TTS distante est simulée dans les tests déterministes ; l'appel réel
-à Google a été tenté avec la vérification TLS activée, mais la connexion est refusée
-dans l'environnement cloud de préparation. La génération réelle reste à vérifier sur
-le PC Windows. La préparation automatique réelle (création du venv, installation, démarrage) a aussi
-été vérifiée sous Linux dans un dossier avec espaces et accents.
-Le lanceur Windows est fourni mais ne peut pas être exécuté nativement
-sur la machine Linux de préparation. Aucun exécutable autonome `.exe` n'est fourni.
+Le lanceur Windows n’est pas exécuté nativement sur la machine Linux de préparation.
+Le TTS distant reste à vérifier sur votre PC : l’accès Google est refusé dans le cloud ;
+les tests déterministes simulent la réponse audio. Les médias fournis et les instantanés
+sont décodés dans le navigateur. Aucun exécutable `.exe` autonome n’est fourni.
 
-Pour les développeurs :
-
-```sh
-python -m pip install -r local/requirements.txt
-python -m unittest discover -s tests -p test_local.py -v
-python local/server.py --no-browser --port 8092 --data-dir /tmp/english-local-test
-# Puis, dans un autre terminal avec Playwright et Chromium :
-node tests/local-browser.cjs
-```
-
-L’atelier, les jeux, la préparation de séance et l’impression partagent une feuille de style commune.
-Les contrôles du TBI et le contraste élevé restent disponibles.
-Les tests `print-browser.cjs` et `session-browser.cjs` utilisent aussi les outils développeur
-`pdfinfo`, `pdftotext` et FFmpeg ; ces outils ne sont pas requis pour utiliser l’application.
+Pour les développeurs : installer `local/requirements.txt`, puis exécuter
+`python -m unittest discover -s tests -p 'test_*.py'`.
+Les tests navigateur utilisent Playwright et Chromium ; certains utilisent aussi
+FFmpeg, pdfinfo et pdftotext. Ces outils ne sont pas requis pour faire classe.
+Utiliser des données de test fraîches pour chaque scénario qui crée ou renomme des objets.
