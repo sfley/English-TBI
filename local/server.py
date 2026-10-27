@@ -171,7 +171,7 @@ def repack(manifest, data):
     return output.getvalue()
 
 
-def atomic_files(updates):
+def atomic_files(updates, remove=()):
     # Stage all files before modifying any target, and roll back a partial write.
     staged, originals = {}, {}
     try:
@@ -182,10 +182,15 @@ def atomic_files(updates):
             with os.fdopen(fd, 'wb') as stream:
                 stream.write(data)
             staged[path] = Path(name)
+        for path in remove:
+            originals[path] = path.read_bytes() if path.exists() else None
         changed = []
         try:
             for path, temp in staged.items():
                 os.replace(temp, path)
+                changed.append(path)
+            for path in remove:
+                path.unlink(missing_ok=True)
                 changed.append(path)
         except OSError:
             for path in reversed(changed):
@@ -512,7 +517,8 @@ class Handler(BaseHTTPRequestHandler):
                 kind=path.rsplit('/',1)[-1]
                 with self.server.write_lock:
                     payload=json.loads(raw)
-                    if kind=='duplicate':result=self.server.curriculum.duplicate(payload['id'])
+                    if kind=='delete':result=self.server.curriculum.delete(payload['kind'],payload['id'])
+                    elif kind=='duplicate':result=self.server.curriculum.duplicate(payload['id'])
                     elif kind=='reorder':result=self.server.curriculum.reorder(payload.get('sequence_id'),payload.get('ids'))
                     else:result=self.server.curriculum.save(kind,payload)
                 return self.send(result)

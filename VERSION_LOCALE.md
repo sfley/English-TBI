@@ -1,4 +1,4 @@
-# English TBI local — version 2.0 pour Windows
+# English TBI local — version 2.1 pour Windows
 
 L’accueil présente vos **séquences** et vos **séances enregistrées**. Les thèmes sont
 la réserve de cartes ; chaque séance enregistre les cartes précises qu’elle utilise.
@@ -29,6 +29,16 @@ communes, puis enregistrez. Vous retrouvez la séquence sur l’accueil.
 Depuis sa carte, **Ajouter une séance** crée une séance rattachée. Les flèches ↑ ↓
 permettent de réordonner les séances. Le numéro d’ordre est également modifiable
 sur la fiche de séance. **Modifier la séquence** permet de reprendre ses informations.
+
+## Supprimer une séance ou une séquence
+
+Sur l’accueil, le bouton **Supprimer** demande une confirmation avant toute action.
+Supprimer une séance retire uniquement cette séance.
+Supprimer une séquence conserve ses séances comme **séances indépendantes** ; les
+ressources communes sont reprises dans ces séances pour conserver leur utilisation.
+Les thèmes et les fichiers de ressources ne sont pas supprimés.
+Les anciennes préparations récupérées puis supprimées ne réapparaissent pas au redémarrage.
+Aucune corbeille ni commande de restauration n’est ajoutée à l’interface.
 
 ## Préparer une séance
 
@@ -120,7 +130,7 @@ Le site déjà publié sur La Forge reste indépendant de cette version locale.
 
 Vérifications sous Python 3.12 et Chromium sur Linux :
 
-- 21 tests Python : thèmes et ZIP, séquences et séances, ordre, duplication,
+- 25 tests Python : thèmes et ZIP, séquences et séances, ordre, duplication,
   plusieurs thèmes, persistance au redémarrage, reprise des anciennes préparations,
   protection des instantanés après modification d’un thème et validation des données.
 - Parcours navigateur : création de séquence et de séance nommée, six cartes précises,

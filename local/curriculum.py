@@ -125,13 +125,45 @@ class Curriculum:
         self.atomic_files(updates)
         return {'saved':True}
 
+    def deletion_backup_path(self,ident):
+        if not isinstance(ident,str) or not re.fullmatch('[a-f0-9]{32}',ident):
+            raise ValueError('Identifiant de suppression invalide.')
+        return self.root/'suppressions'/ident
+
+    def delete(self,kind,ident):
+        target=self.path(kind,ident)
+        original=self.get(kind,ident)
+        trash_id=uuid.uuid4().hex
+        trash=self.deletion_backup_path(trash_id)
+        entry={'kind':kind,'metadata':original,'children':[]}
+        updates={}
+        remove=[target]
+        if kind=='lessons':
+            snapshot=self.root/'snapshots'/(ident+'.zip')
+            updates[trash/'snapshot.zip']=snapshot.read_bytes()
+            remove.append(snapshot)
+        else:
+            listing=self.listing()
+            if listing['warnings']:raise ValueError('Un fichier de préparation est illisible. Récupérez-le avant de supprimer la séquence.')
+            for child in listing['lessons']:
+                if child.get('sequence_id')!=ident:continue
+                inherited=[r for r in original['resources'] if r not in child['resources']]
+                entry['children'].append({'id':child['id'],'inherited':inherited})
+                child['sequence_id']=None
+                child['resources']=inherited+child['resources']
+                updates[self.path('lessons',child['id'])]=json.dumps(child,ensure_ascii=False).encode()
+        updates[trash/'entry.json']=json.dumps(entry,ensure_ascii=False).encode()
+        updates[self.root/'deleted'/kind/(ident+'.json')]=json.dumps({'trash_id':trash_id}).encode()
+        self.atomic_files(updates,remove=remove)
+        return {'deleted':True,'trash_id':trash_id}
+
     def migrate_legacy(self):
         for file in sorted((self.workshop.data_dir/'seances').glob('*.json')):
             try:
                 data=json.loads(file.read_text(encoding='utf-8'))
                 if data.get('selected') is None and not data.get('resources'):continue
                 ident=uuid.uuid5(uuid.NAMESPACE_URL,'english-tbi-recovered:'+file.stem).hex
-                if self.path('lessons',ident).exists():continue
+                if self.path('lessons',ident).exists() or (self.root/'deleted'/'lessons'/(ident+'.json')).exists():continue
                 with zipfile.ZipFile(self.workshop.path_for(file.stem)) as archive:
                     theme=json.loads(archive.read('manifest.json'))
                 selected=data.get('selected')

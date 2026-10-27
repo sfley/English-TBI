@@ -68,6 +68,55 @@ class CurriculumTests(unittest.TestCase):
         self.assertEqual(len(recovered),1);self.assertEqual(recovered[0]['card_count'],6)
         self.assertTrue(legacy.exists())
 
+    def test_delete_lesson_keeps_other_lessons_and_themes(self):
+        first=self.c.save('lessons',self.payload(3));second=self.c.save('lessons',self.payload(4))
+        self.c.delete('lessons',first['id'])
+        self.assertFalse(self.c.path('lessons',first['id']).exists())
+        self.assertFalse((self.c.root/'snapshots'/(first['id']+'.zip')).exists())
+        self.assertEqual(self.c.detail(second['id'])['card_count'],4)
+        self.assertTrue(self.app.path_for(self.theme['id']).exists())
+
+    def test_delete_sequence_detaches_sessions_and_preserves_resources(self):
+        resource={'title':'Chanson commune','kind':'song','url':'https://example.org/song'}
+        sequence=self.c.save('sequences',{'title':'Ma séquence','resources':[resource]})
+        payload=self.payload();payload['sequence_id']=sequence['id']
+        lesson=self.c.save('lessons',payload)
+        cards=self.c.detail(lesson['id'])['cards']
+        self.c.delete('sequences',sequence['id'])
+        detail=self.c.detail(lesson['id'])
+        self.assertIsNone(detail['sequence_id'])
+        self.assertIsNone(detail['sequence'])
+        self.assertEqual(detail['cards'],cards)
+        self.assertEqual(detail['resources'][0]['title'],'Chanson commune')
+
+    def test_deleted_recovered_lesson_does_not_reappear(self):
+        legacy=self.app.data_dir/'seances'/(self.theme['id']+'.json')
+        legacy.parent.mkdir(parents=True,exist_ok=True)
+        legacy.write_text(json.dumps({'selected':[c['file'] for c in self.theme['cards'][:6]],'resources':[]}))
+        self.c.migrate_legacy()
+        lesson=self.c.listing()['lessons'][0]
+        self.c.delete('lessons',lesson['id'])
+        self.c.migrate_legacy()
+        self.assertEqual(self.c.listing()['lessons'],[])
+        self.assertTrue(legacy.exists())
+
+    def test_failed_delete_rolls_back(self):
+        from unittest.mock import patch
+        lesson=self.c.save('lessons',self.payload())
+        target=self.c.path('lessons',lesson['id'])
+        unlink=Path.unlink
+        failed=False
+        def fail_once(path,*args,**kwargs):
+            nonlocal failed
+            if path==target and not failed:
+                failed=True
+                raise OSError('Simulated disk failure')
+            return unlink(path,*args,**kwargs)
+        with patch.object(Path,'unlink',fail_once):
+            with self.assertRaises(OSError):self.c.delete('lessons',lesson['id'])
+        self.assertEqual(self.c.detail(lesson['id'])['card_count'],6)
+        self.assertFalse((self.c.root/'deleted'/'lessons'/(lesson['id']+'.json')).exists())
+
     def test_validation_is_non_destructive(self):
         lesson=self.c.save('lessons',self.payload())
         for update in [{'resources':[{'title':'Bad','url':'javascript:alert(1)'}]},{'duration':0},{'sources':[]},{'sequence_id':'../bad'}]:
