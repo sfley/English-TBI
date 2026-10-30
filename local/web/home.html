@@ -1,1 +1,45 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>English TBI · Mes séquences et séances</title><link rel="stylesheet" href="atelier.css"></head><body><header class="top"><div><span class="eyebrow">ENGLISH TBI · MA CLASSE</span><h1>Mes séquences et séances</h1><p>Préparez une fois. Retrouvez vos cartes, vos jeux et vos ressources au moment de faire classe.</p></div><div><a class="button primary" href="/sequence.html">Nouvelle séquence</a> <a class="button" href="/lesson.html">Séance indépendante</a></div></header><main class="dashboard"><p id="message" role="status"></p><div id="content"></div></main><footer>Version locale 2.1 · Vos préparations restent sur cet ordinateur.</footer><script src="curriculum-ui.js"></script><script src="home.js"></script></body></html>
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>English TBI · Mes séances</title>
+    <link rel="stylesheet" href="atelier.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <span class="eyebrow">BÊTA 3 · MA CLASSE</span>
+        <h1>Mes séances</h1>
+        <p>Retrouvez votre séance. Préparez, jouez, imprimez.</p>
+      </div>
+      <div class="quick-actions">
+        <a class="button primary" href="/lesson.html">Créer une séance</a
+        ><a class="button" href="/sequence.html">Nouvelle séquence</a>
+      </div>
+    </header>
+    <main class="dashboard">
+      <div class="dashboard-tools">
+        <label class="search-label"
+          >Rechercher une séance<input
+            id="search"
+            type="search"
+            placeholder="Nom, séquence, objectif…" /></label
+        ><a class="button" href="/themes.html">Thèmes et cartes</a
+        ><a class="button" href="/documents.html">Documents et liens</a
+        ><a class="button" id="backup" href="/api/backup" download
+          >Sauvegarder tout</a
+        >
+      </div>
+      <p id="backup-state" class="hint"></p>
+      <div id="resume"></div>
+      <p id="message" role="status"></p>
+      <div id="content"></div>
+    </main>
+    <footer>
+      Bêta locale 3 · Vos préparations restent sur cet ordinateur.
+    </footer>
+    <script src="curriculum-ui.js"></script>
+    <script src="home.js"></script>
+  </body>
+</html>

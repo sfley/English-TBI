@@ -1,13 +1,139 @@
-const {chromium}=require('playwright');const assert=require('node:assert/strict');const base=process.env.LOCAL_TEST_URL||'http://127.0.0.1:8105/';
-(async()=>{const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});const p=await b.newPage({viewport:{width:1366,height:768}});const errors=[];p.on('pageerror',e=>{console.error(e.stack);errors.push(e.message);});try{
- await p.goto(base);await p.locator('a').filter({hasText:/^Nouvelle séquence$/}).click();await p.locator('#title').fill('Feelings CP');await p.locator('#level').fill('CP');await p.locator('#objective').fill('Dire comment on se sent');await p.locator('#save').click();await p.waitForURL('**/?sequence=*');await p.waitForSelector('.sequence-card');assert.equal(await p.locator('.sequence-card h2').textContent(),'Feelings CP');console.log('PASS accueil et création de séquence');
- await p.locator('a').filter({hasText:'Ajouter une séance'}).click();await p.locator('#title').fill('Séance découverte');await p.locator('#instructions').fill('Écouter puis choisir une carte.');await p.waitForFunction(()=>document.querySelectorAll('#bank option').length===2);const fruits=await p.locator('#bank option').evaluateAll(es=>es.find(e=>e.textContent==='fruits').value);await p.selectOption('#bank',fruits);await p.locator('#add-theme').click();await p.waitForFunction(()=>document.querySelectorAll('#sources input[type=checkbox]').length===17);await p.locator('#sources input[type=number]').fill('6');await p.locator('#sources button').filter({hasText:'Choisir ce nombre'}).click();assert.equal(await p.locator('#sources input[type=checkbox]:checked').count(),6);
- await p.locator('#resources input[aria-label="Titre de la ressource"]').fill('Rituel');await p.locator('#resources input[aria-label="Lien de la ressource"]').fill('https://example.org/rituel');await p.locator('#resources button').filter({hasText:'Ajouter le lien'}).click();await p.locator('#save').click();await p.waitForURL('**/?sequence=*');await p.waitForSelector('.lesson-card');assert.match(await p.locator('.lesson-card').textContent(),/6 cartes/);console.log('PASS séance nommée avec sélection précise et ressource');
- await p.locator('.lesson-card a').filter({hasText:/^Lancer$/}).click();await p.waitForSelector('#games a');assert.equal(await p.locator('#title').textContent(),'Séance découverte');assert.equal(await p.locator('#resources a').getAttribute('href'),'https://example.org/rituel');assert.equal(await p.locator('#cards img').count(),6);const words=await p.locator('#cards img').evaluateAll(es=>es.map(e=>e.alt));const lessonURL=p.url();
- await p.locator('#games a').filter({hasText:/^Listen$/}).click();await p.waitForSelector('.play-mode');assert.equal(await p.locator('#stage .card').count(),6);const labels=await p.locator('#stage img').evaluateAll(es=>es.map(e=>e.alt));assert.deepEqual([...labels].sort(),[...words].sort());
- await p.locator('#game-settings summary').click();const panel=await p.locator('.settings-panel').boundingBox();assert.ok(panel.x>=0&&panel.x+panel.width<=1366);assert.ok(panel.y>=0&&panel.y+panel.height<=768);assert.equal(await p.locator('#toggleHC').isVisible(),true);await p.setViewportSize({width:640,height:600});await p.waitForTimeout(100);const small=await p.locator('.settings-panel').boundingBox();assert.ok(small.x>=0&&small.x+small.width<=640&&small.y>=0&&small.y+small.height<=600);await p.setViewportSize({width:1366,height:768});await p.keyboard.press('Escape');console.log('PASS jeux limités à la séance, réglages entièrement dans l’écran');
- await p.locator('.play-toolbar a').filter({hasText:'Retour à ma séance'}).click();await p.waitForSelector('#title');assert.equal(p.url(),lessonURL);await p.locator('#actions a').filter({hasText:/^Imprimer$/}).click();await p.waitForFunction(()=>!document.querySelector('#print').disabled);assert.equal(await p.locator('.tile').count(),12);console.log('PASS retour à la séance et impression de ses six cartes');
- await p.locator('#app-navigation [data-module=prepare]').click();await p.waitForFunction(()=>document.querySelector('#title')?.value==='Séance découverte'&&!document.querySelector('#editor-fields').disabled);assert.equal(await p.locator('#sources input[type=checkbox]:checked').count(),6);await p.locator('#title').fill('Titre non enregistré');let guarded=false;p.once('dialog',async d=>{guarded=true;await d.dismiss();});await p.locator('.app-brand').click({noWaitAfter:true});await p.waitForTimeout(250);assert.equal(guarded,true);await p.locator('#title').fill('Séance découverte');await p.locator('#save').click();await p.waitForURL('**/?sequence=*');
- await p.locator('.lesson-card button').filter({hasText:'Dupliquer'}).click();await p.waitForFunction(()=>document.querySelector('#title')?.value?.includes('copie'));assert.equal(await p.locator('#sources input[type=checkbox]:checked').count(),6);await p.locator('#title').fill('Séance entraînement');await p.locator('#save').click();await p.waitForURL('**/?sequence=*');assert.equal(await p.locator('.lesson-card').count(),2);await p.locator('.lesson-card').nth(1).getByRole('button',{name:/^Monter /}).click();await p.waitForFunction(()=>document.querySelector('.lesson-card h3')?.textContent==='Séance entraînement');await p.reload();await p.waitForFunction(()=>document.querySelectorAll('.lesson-card').length===2);console.log('PASS duplication, protection des modifications et persistance');assert.deepEqual(errors,[]);
- await p.screenshot({path:'/tmp/sequences-home.png',fullPage:true});
-}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+const { chromium } = require("playwright");
+const assert = require("node:assert/strict");
+const base = process.env.LOCAL_TEST_URL || "http://127.0.0.1:8105/";
+(async () => {
+  const b = await chromium.launch({
+    executablePath: "/usr/bin/chromium",
+    args: ["--no-sandbox"],
+  });
+  const p = await b.newPage({ viewport: { width: 1366, height: 768 } });
+  const errors = [];
+  p.on("pageerror", (e) => errors.push(e.message));
+  try {
+    await p.goto(base);
+    const fixture = await p.evaluate(async () => {
+      const token = (await fetch("/api/session").then((r) => r.json())).token;
+      const send = async (path, d) => {
+        const r = await fetch(path, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Local-Token": token,
+          },
+          body: JSON.stringify(d),
+        });
+        if (!r.ok) throw Error(await r.text());
+        return r.json();
+      };
+      const seq = await send("/api/curriculum/sequences", {
+        title: "Progression de test",
+      });
+      const theme = (await fetch("/api/themes").then((r) => r.json()))
+        .themes[0];
+      const detail = await fetch("/api/themes/" + theme.id).then((r) =>
+        r.json(),
+      );
+      const lesson = await send("/api/curriculum/lessons", {
+        title: "Première séance",
+        sequence_id: seq.id,
+        sources: [
+          {
+            theme_id: theme.id,
+            cards: detail.cards.slice(0, 6).map((c) => c.file),
+          },
+        ],
+        stages: [{ title: "Rituel", kind: "offline", minutes: 5 }],
+        sentence: "I like…",
+      });
+      return { seq, lesson };
+    });
+    await p.reload();
+    await p.waitForSelector(".lesson-card");
+    await p
+      .locator(".lesson-card")
+      .filter({ hasText: "Première séance" })
+      .getByRole("link", { name: "Préparer", exact: true })
+      .click();
+    await p.waitForSelector("#editor-fields:not([disabled])");
+    assert.equal(await p.locator("#sources input:checked").count(), 6);
+    assert.equal(await p.locator(".stage-editor").count(), 1);
+    assert.equal(await p.locator("#sentence").inputValue(), "I like…");
+    console.log("PASS fiche unique avec sélection et déroulé enregistrés");
+    await p.locator("#title").fill("Titre non enregistré");
+    let guarded = false;
+    p.once("dialog", async (d) => {
+      guarded = d.type() === "beforeunload";
+      await d.dismiss();
+    });
+    await p.locator(".app-brand").click({ noWaitAfter: true });
+    await p.waitForTimeout(100);
+    assert.ok(guarded);
+    await p.locator("#title").fill("Première séance");
+    await p.locator("#save").click();
+    await p.waitForURL("**/lesson.html?id=*&saved=1");
+    console.log("PASS protection des modifications et sauvegarde sur la fiche");
+    await p.locator(".app-brand").click();
+    await p.waitForSelector(".lesson-card");
+    await p
+      .locator(".lesson-card")
+      .filter({ hasText: "Première séance" })
+      .locator(".more-actions>summary")
+      .click();
+    await p.getByRole("button", { name: "Dupliquer", exact: true }).click();
+    await p.waitForFunction(
+      () =>
+        document.querySelector("#title")?.value?.includes("copie") &&
+        !document.querySelector("#editor-fields").disabled,
+    );
+    assert.equal(await p.locator("#sources input:checked").count(), 6);
+    assert.equal(await p.locator(".stage-editor").count(), 1);
+    await p.locator("#title").fill("Seconde séance");
+    await p.locator("#save").click();
+    await p.waitForURL("**/lesson.html?id=*&saved=1");
+    await p.locator(".app-brand").click();
+    await p.waitForFunction(
+      () => document.querySelectorAll(".lesson-card").length === 2,
+    );
+    await p
+      .locator(".lesson-card")
+      .filter({ hasText: "Seconde séance" })
+      .locator(".more-actions>summary")
+      .click();
+    await p
+      .getByRole("button", { name: "Monter Seconde séance", exact: true })
+      .click();
+    await p.waitForFunction(
+      () =>
+        document.querySelector(".lesson-card h3")?.textContent ===
+        "Seconde séance",
+    );
+    await p.reload();
+    await p.waitForFunction(
+      () => document.querySelectorAll(".lesson-card").length === 2,
+    );
+    assert.equal(
+      await p.locator(".lesson-card h3").first().textContent(),
+      "Seconde séance",
+    );
+    console.log("PASS duplication complète, réordonnancement et persistance");
+    await p.locator("#search").fill("Seconde");
+    assert.equal(await p.locator(".lesson-card").count(), 1);
+    await p
+      .locator(".lesson-card")
+      .getByRole("link", { name: "Préparer", exact: true })
+      .click();
+    await p.waitForSelector("#editor-fields:not([disabled])");
+    await p.locator(".app-brand").click();
+    await p.waitForFunction(
+      () => document.querySelector("#search")?.value === "Seconde",
+    );
+    assert.equal(await p.locator(".lesson-card").count(), 1);
+    console.log("PASS recherche conservée au retour");
+    assert.deepEqual(errors, []);
+  } finally {
+    await b.close();
+  }
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});

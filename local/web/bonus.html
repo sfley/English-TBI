@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Jouer · English TBI</title>
+    <link rel="stylesheet" href="atelier.css" />
+  </head>
+  <body class="bonus-mode">
+    <div class="bonus-toolbar">
+      <label>Activité<select id="activity"></select></label
+      ><a id="return" class="button" href="/">← Retour à la séance</a
+      ><button id="documents-button" type="button">Documents et déroulé</button
+      ><button id="fullscreen" type="button">Plein écran</button>
+    </div>
+    <main id="bonus-stage" class="bonus-stage">
+      <p id="message" role="status">Chargement de la séance…</p>
+    </main>
+    <dialog id="documents-dialog">
+      <div class="section-title">
+        <h2>Documents de la séance</h2>
+        <button id="close-documents" type="button">Fermer</button>
+      </div>
+      <div id="game-documents"></div>
+      <a id="lesson-flow" class="button" href="/">Ouvrir le déroulé</a>
+    </dialog>
+    <script src="curriculum-ui.js"></script>
+    <script src="bonus.js"></script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Documents et liens · English TBI</title>
+    <link rel="stylesheet" href="atelier.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <span class="eyebrow">PRÉPARER</span>
+        <h1>Documents et liens</h1>
+        <p>Les documents de vos thèmes, séquences et séances, réunis ici.</p>
+      </div>
+      <a class="button" href="/lesson.html">Ajouter à une nouvelle séance</a>
+    </header>
+    <main class="dashboard">
+      <div class="dashboard-tools">
+        <label
+          >Rechercher<input
+            id="search"
+            type="search"
+            placeholder="Titre, séance, séquence…" /></label
+        ><label
+          >Type<select id="kind">
+            <option value="">Tous les types</option>
+            <option value="song">Chanson</option>
+            <option value="video">Vidéo</option>
+            <option value="game">Jeu en ligne</option>
+            <option value="prep">Fiche de préparation</option>
+            <option value="other">Autre</option>
+          </select></label
+        ><label
+          >Thème<select id="theme">
+            <option value="">Tous les thèmes</option>
+          </select></label
+        >
+      </div>
+      <p id="message" role="status"></p>
+      <div id="documents" class="document-bank"></div>
+    </main>
+    <script src="curriculum-ui.js"></script>
+    <script src="documents.js"></script>
+  </body>
+</html>

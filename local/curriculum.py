@@ -7,6 +7,8 @@ import uuid
 import zipfile
 from urllib.parse import urlsplit
 
+GAMES = ['tableau','listen','mask','pairs','order','missing','vf','bingo','oral','survey','teams']
+SKILLS = ['Comprendre à l’oral','Lire et comprendre','Parler en continu','Échanger à l’oral','Écrire']
 
 class Curriculum:
     def __init__(self, workshop, build_pack, atomic_files):
@@ -60,6 +62,7 @@ class Curriculum:
         return result
 
     def save(self,kind,payload):
+        if not isinstance(payload,dict):raise ValueError('Préparation invalide.')
         ident=payload.get('id') or uuid.uuid4().hex
         target=self.path(kind,ident)
         old=self.get(kind,ident) if target.exists() else None
@@ -71,7 +74,13 @@ class Curriculum:
               'position':position,'objective':self.string(payload,'objective'),
               'notes':self.string(payload,'notes',10000),'resources':self.resources(payload.get('resources',[]))}
         updates={}
-        if kind=='sequences':data['level']=self.string(payload,'level',80)
+        if kind=='sequences':
+            data['level']=self.string(payload,'level',80)
+            for field in ['culture','final_task','lexicon','structures','phonology','criteria']:
+                data[field]=self.string(payload,field,4000) if field in payload else (old or {}).get(field,'')
+            skills=payload.get('skills',(old or {}).get('skills',[]))
+            if not isinstance(skills,list) or any(x not in SKILLS for x in skills):raise ValueError('Activité langagière invalide.')
+            data['skills']=list(dict.fromkeys(skills))
         else:
             sequence=payload.get('sequence_id') or None
             if sequence:self.get('sequences',sequence)
@@ -90,6 +99,9 @@ class Curriculum:
             count=sum(len(x['cards']) for x in cleaned)
             if not 2<=count<=60:raise ValueError('Sélectionnez de 2 à 60 cartes au total.')
             data.update(sequence_id=sequence,duration=duration,sources=cleaned,instructions=self.string(payload,'instructions',5000))
+            for field in ['sentence','criteria']:
+                data[field]=self.string(payload,field,4000) if field in payload else (old or {}).get(field,'')
+            data['stages']=self.stages(payload.get('stages',(old or {}).get('stages',[])))
             if old and old['sources']==cleaned and not payload.get('refresh'):
                 data['card_count']=old['card_count']
                 data['snapshot_sources']=old.get('snapshot_sources',[])
@@ -104,13 +116,53 @@ class Curriculum:
                             c=bank[key]
                             cards.append({'label':c['label'],'image':'data:image/png;base64,'+base64.b64encode(z.read(c['image'])).decode(),
                                           'audio':'data:audio/mpeg;base64,'+base64.b64encode(z.read(c['audio'])).decode()})
-                manifest,pack=self.build_pack({'id':ident,'name':data['title'],'cards':cards})
+                manifest,pack=self.build_pack({'id':ident,'name':data['title'][:80],'cards':cards})
                 updates[self.root/'snapshots'/(ident+'.zip')]=pack
                 data['card_count']=len(cards)
                 data['snapshot_sources']=[c['label'] for c in cards]
         updates[target]=json.dumps(data,ensure_ascii=False,indent=2).encode()
         self.atomic_files(updates)
         return data
+
+    def stages(self,items):
+        if not isinstance(items,list) or len(items)>30:raise ValueError('30 étapes maximum par séance.')
+        result=[]
+        for item in items:
+            if not isinstance(item,dict):raise ValueError('Étape invalide.')
+            kind=item.get('kind','offline')
+            if kind not in ['offline','game','resource']:raise ValueError('Type d’étape invalide.')
+            minutes=item.get('minutes',5)
+            if type(minutes) is not int or not 1<=minutes<=180:raise ValueError('Durée d’étape : de 1 à 180 minutes.')
+            stage={'title':self.string(item,'title',120,True),'instructions':self.string(item,'instructions',5000),'kind':kind,'minutes':minutes}
+            if kind=='game':
+                if item.get('game') not in GAMES:raise ValueError('Jeu inconnu dans le déroulé.')
+                stage['game']=item['game']
+            if kind=='resource':
+                stage['resource']=self.resources([item.get('resource')])[0]
+            result.append(stage)
+        return result
+
+    def documents(self):
+        listing=self.listing()
+        found={}
+        def add(resource,source,title,href,theme_names):
+            key=(resource['url'],resource['title'],resource['kind'])
+            item=found.setdefault(key,{**resource,'uses':[],'themes':[]})
+            usage={'source':source,'title':title,'href':href}
+            if usage not in item['uses']:item['uses'].append(usage)
+            item['themes']=sorted(set(item['themes']+theme_names))
+        themes={m['id']:m['name'] for m in self.workshop.manifests()}
+        for tid,name in themes.items():
+            for r in self.workshop.session_data(tid).get('resources',[]):add(r,'theme',name,'/themes.html?theme='+tid,[name])
+        for kind in ['sequences','lessons']:
+            for item in listing[kind]:
+                sources=item.get('sources',[]) if kind=='lessons' else [s for l in listing['lessons'] if l.get('sequence_id')==item['id'] for s in l.get('sources',[])]
+                names=[themes[s['theme_id']] for s in sources if s['theme_id'] in themes]
+                href=('/sequence.html?id=' if kind=='sequences' else '/lesson.html?id=')+item['id']
+                for r in item.get('resources',[]):add(r,kind,item['title'],href,names)
+                for stage in item.get('stages',[]):
+                    if stage['kind']=='resource':add(stage['resource'],kind,item['title'],href,names)
+        return {'documents':list(found.values()),'warnings':listing['warnings']}
 
     def reorder(self,sequence,identifiers):
         if sequence:self.get('sequences',sequence)
@@ -151,6 +203,7 @@ class Curriculum:
                 entry['children'].append({'id':child['id'],'inherited':inherited})
                 child['sequence_id']=None
                 child['resources']=inherited+child['resources']
+                child['criteria']=child.get('criteria') or original.get('criteria','')
                 updates[self.path('lessons',child['id'])]=json.dumps(child,ensure_ascii=False).encode()
         updates[trash/'entry.json']=json.dumps(entry,ensure_ascii=False).encode()
         updates[self.root/'deleted'/kind/(ident+'.json')]=json.dumps({'trash_id':trash_id}).encode()

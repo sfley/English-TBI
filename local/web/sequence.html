@@ -1,1 +1,121 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>English TBI · Préparer une séquence</title><link rel="stylesheet" href="atelier.css"></head><body><header class="top"><div><span class="eyebrow">PRÉPARER</span><h1>Ma séquence</h1></div></header><main class="document-layout"><form id="editor" class="editor"><fieldset id="editor-fields" disabled><label>Titre de la séquence<input id="title" maxlength="120" required placeholder="Feelings — CP / CE1"></label><label>Niveau<input id="level" maxlength="80" placeholder="CP / CE1"></label><label>Objectif commun<textarea id="objective" maxlength="2000" rows="3"></textarea></label><label>État<select id="status"><option>À préparer</option><option>Prête</option><option>Réalisée</option></select></label><label>Notes de préparation<textarea id="notes" maxlength="10000" rows="4"></textarea></label><h2>Ressources communes</h2><p>Les séances de cette séquence retrouveront ces ressources, dans l’ordre choisi.</p><div id="resources"></div><div class="actions"><button class="primary" id="save">Enregistrer la séquence</button><a class="button" href="/">Retour à l’accueil</a></div><p id="message" role="status"></p></fieldset></form></main><script src="curriculum-ui.js"></script><script src="sequence.js"></script></body></html>
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Préparer ma séquence · English TBI</title>
+    <link rel="stylesheet" href="atelier.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <span class="eyebrow">PRÉPARER</span>
+        <h1>Ma séquence</h1>
+        <p>Un projet, des apprentissages, des séances.</p>
+      </div>
+    </header>
+    <main class="document-layout">
+      <form id="editor" class="editor">
+        <fieldset id="editor-fields" disabled>
+          <div class="metadata">
+            <label
+              >Titre de la séquence<input
+                id="title"
+                maxlength="120"
+                required
+                placeholder="Feelings" /></label
+            ><label
+              >Niveau<input id="level" maxlength="80" placeholder="CP / CE1"
+            /></label>
+          </div>
+          <label
+            >Projet / tâche finale<textarea
+              id="final_task"
+              maxlength="4000"
+              rows="2"
+              placeholder="À la fin, les élèves pourront…"
+            ></textarea></label
+          ><label
+            >Objectif commun<textarea
+              id="objective"
+              maxlength="2000"
+              rows="2"
+            ></textarea>
+          </label>
+          <details class="work-block">
+            <summary>Objectifs pédagogiques et culturels</summary>
+            <label
+              >Entrée culturelle<textarea
+                id="culture"
+                maxlength="4000"
+                rows="2"
+                placeholder="Album, chanson, fête, œuvre…"
+              ></textarea>
+            </label>
+            <fieldset id="skills">
+              <legend>Activités langagières</legend>
+            </fieldset>
+            <label
+              >Lexique<textarea
+                id="lexicon"
+                maxlength="4000"
+                rows="2"
+              ></textarea></label
+            ><label
+              >Structures / phrases modèles<textarea
+                id="structures"
+                maxlength="4000"
+                rows="2"
+                placeholder="How are you? / I’m…"
+              ></textarea></label
+            ><label
+              >Phonologie<textarea
+                id="phonology"
+                maxlength="4000"
+                rows="2"
+                placeholder="Sons, accentuation, intonation…"
+              ></textarea></label
+            ><label
+              >Critères de réussite<textarea
+                id="criteria"
+                maxlength="4000"
+                rows="3"
+                placeholder="Je comprends… / Je peux…"
+              ></textarea></label
+            ><label
+              >Notes<textarea id="notes" maxlength="10000" rows="3"></textarea>
+            </label>
+          </details>
+          <details class="work-block">
+            <summary>Documents et liens communs à la séquence</summary>
+            <div id="resources"></div>
+          </details>
+          <label
+            >État<select id="status">
+              <option>À préparer</option>
+              <option>Prête</option>
+              <option>Réalisée</option>
+            </select></label
+          >
+          <div class="actions">
+            <a class="button" href="/">← Accueil</a
+            ><button class="primary" id="save">Enregistrer la séquence</button>
+          </div>
+          <p id="message" role="status"></p>
+        </fieldset>
+      </form>
+      <section id="sequence-lessons" class="editor" hidden>
+        <h2>Les séances</h2>
+        <div id="sequence-list"></div>
+        <h3>Créer une séance à partir d’une étape</h3>
+        <p class="hint">
+          Une proposition à adapter : vous choisissez ensuite les cartes et le
+          déroulé.
+        </p>
+        <div id="suggestions" class="quick-actions"></div>
+      </section>
+    </main>
+    <script src="curriculum-ui.js"></script>
+    <script src="sequence.js"></script>
+  </body>
+</html>

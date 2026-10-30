@@ -1,6 +1,8 @@
-# Version locale Windows
+# Bêta locale 3 pour Windows
 
-Commencez par [VERSION_LOCALE.md](VERSION_LOCALE.md), puis double-cliquez sur **DEMARRER.bat** dans le dossier extrait. Cette branche contient l’accueil des séquences et séances enregistrées, l’éditeur de thèmes, les sept activités et les impressions. La version locale 2.0 conserve une copie des cartes et sons dans chaque séance préparée.
+Commencez par [VERSION_LOCALE.md](VERSION_LOCALE.md), puis double-cliquez sur **DEMARRER.bat** dans le dossier extrait. Cette bêta rassemble un accueil simplifié, la préparation pédagogique des séquences, un déroulé de séance, les documents, onze activités et neuf supports d’impression. Les cartes et sons sont conservés dans chaque séance préparée. Pour mettre à jour une installation, copiez son dossier **donnees_locales** dans le nouveau dossier avant le lancement.
+
+La suite de ce document décrit le site statique d’origine, indépendant du serveur local de la bêta.
 
 ---
 

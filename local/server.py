@@ -2,6 +2,7 @@
 import argparse
 import base64
 import binascii
+from datetime import datetime, timezone
 import io
 import json
 import mimetypes
@@ -418,6 +419,27 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send({'token':self.server.token})
             if path == '/api/curriculum':
                 return self.send(self.server.curriculum.listing())
+            if path == '/api/documents':
+                return self.send(self.server.curriculum.documents())
+            if path == '/api/backup':
+                # Disk-backed ZIP: videos need not fit in server memory.
+                with tempfile.TemporaryFile() as output:
+                    with self.server.write_lock, zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
+                        root=self.server.data_dir.resolve()
+                        for file in sorted(root.rglob('*')):
+                            if not file.is_file() or file.is_symlink() or not file.resolve().is_relative_to(root):continue
+                            relative=file.relative_to(root)
+                            if relative.parts[0]=='site' or file.name.endswith('.tmp'):continue
+                            archive.write(file,'donnees_locales/'+relative.as_posix())
+                        archive.writestr('LIRE-MOI.txt','Sauvegarde English TBI. Fermez DEMARRER.bat, conservez votre ancien dossier donnees_locales, puis placez ce dossier donnees_locales dans une copie de l’application de version identique ou plus récente. Ne fusionnez pas deux sauvegardes.')
+                    size=output.tell();output.seek(0)
+                    self.send_response(200)
+                    self.send_header('Content-Type','application/zip')
+                    self.send_header('Content-Length',str(size))
+                    self.send_header('Content-Disposition','attachment; filename="english-tbi-sauvegarde-'+datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')+'.zip"')
+                    self.send_header('Cache-Control','no-store');self.end_headers()
+                    while chunk:=output.read(1024*1024):self.wfile.write(chunk)
+                return
             if path.startswith('/api/curriculum/'):
                 _,_,_,kind,ident = path.split('/')
                 return self.send(self.server.curriculum.detail(ident) if kind=='lessons' else self.server.curriculum.get(kind,ident))
@@ -485,13 +507,13 @@ class Handler(BaseHTTPRequestHandler):
                 resolved = file.relative_to(ROOT).as_posix()
                 if not (resolved in ['index.html','styles.css','cards.js'] or any(file.is_relative_to(ROOT/d) for d in ['js','audio','flashcards'])):
                     raise ValueError('Chemin interdit.')
-            elif path in ['/atelier.js','/atelier.css','/print.html','/print.js','/print.css','/session.html','/session.js','/common.css','/navigation.js','/home.js','/home.html','/lesson.html','/lesson.js','/sequence.html','/sequence.js','/run.html','/run.js','/curriculum-ui.js','/themes.html']:
+            elif path in ['/atelier.js','/atelier.css','/print.html','/print.js','/print.css','/session.html','/session.js','/common.css','/navigation.js','/home.js','/home.html','/lesson.html','/lesson.js','/sequence.html','/sequence.js','/run.html','/run.js','/curriculum-ui.js','/themes.html','/prepare.html','/documents.html','/documents.js','/bonus.html','/bonus.js','/beta.css']:
                 file=ROOT/'local/web'/('index.html' if path=='/themes.html' else path[1:])
             elif path=='/favicon.ico': return self.send(b'',status=204)
             else: return self.send({'error':'Page introuvable.'},status=404)
             data=file.read_bytes()
             if file.suffix == '.html':
-                data=data.replace(b'</head>',b'<link rel="stylesheet" href="/common.css"><script src="/navigation.js" defer></script></head>')
+                data=data.replace(b'</head>',b'<link rel="stylesheet" href="/common.css"><link rel="stylesheet" href="/beta.css"><script src="/navigation.js" defer></script></head>')
             if path in ['/app/','/app/index.html']:
                 lesson=parse_qs(urlsplit(self.path).query).get('lesson',[None])[0]
                 if lesson:
@@ -518,6 +540,11 @@ class Handler(BaseHTTPRequestHandler):
                 with self.server.write_lock:
                     payload=json.loads(raw)
                     if kind=='delete':result=self.server.curriculum.delete(payload['kind'],payload['id'])
+                    elif kind=='attach':
+                        lesson=self.server.curriculum.get('lessons',payload['lesson_id'])
+                        resource=self.server.curriculum.resources([payload['resource']])[0]
+                        if resource not in lesson['resources']:lesson['resources'].append(resource)
+                        result=self.server.curriculum.save('lessons',lesson)
                     elif kind=='duplicate':result=self.server.curriculum.duplicate(payload['id'])
                     elif kind=='reorder':result=self.server.curriculum.reorder(payload.get('sequence_id'),payload.get('ids'))
                     else:result=self.server.curriculum.save(kind,payload)

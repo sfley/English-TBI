@@ -1,150 +1,205 @@
-# English TBI local — version 2.1 pour Windows
+# English TBI — bêta locale 3 pour Windows
 
-L’accueil présente vos **séquences** et vos **séances enregistrées**. Les thèmes sont
-la réserve de cartes ; chaque séance enregistre les cartes précises qu’elle utilise.
-Aucun Git, compte ou jeton n’est nécessaire sur le PC.
+Cette bêta rassemble la préparation pédagogique, les jeux et les impressions dans
+un même parcours. Les données restent sur votre ordinateur. Le site publié sur La
+Forge reste indépendant : GitLab Pages ne peut pas exécuter le serveur local Python.
 
 ## Installer ou mettre à jour
 
-1. Téléchargez le ZIP, puis clic droit > **Extraire tout**.
-2. Pour une mise à jour, fermez l’ancienne application et copiez son dossier
-   **donnees_locales** dans le nouveau dossier, à côté de **DEMARRER.bat**.
-   Gardez l’ancien dossier jusqu’à vérification. Ne copiez pas son `.venv`.
-3. Double-cliquez sur **DEMARRER.bat**. Python 3.10 ou plus doit être installé.
-   Si nécessaire : https://www.python.org/downloads/windows/ ; sur un PC administré,
-   demandez l’installation au responsable informatique.
-4. Le premier lancement installe les dépendances dans `.venv` (Internet nécessaire).
-   Le navigateur s’ouvre ensuite sur l’accueil. Laissez la fenêtre du lanceur ouverte.
+1. Téléchargez le ZIP de cette branche, puis clic droit > **Extraire tout**.
+2. Pour une mise à jour, fermez l’ancienne application. **Copiez son dossier
+   `donnees_locales` en entier dans le nouveau dossier**, à côté de `DEMARRER.bat`.
+   Gardez l’ancienne installation jusqu’à vérification. Ne copiez pas `.venv`.
+3. Double-cliquez sur **DEMARRER.bat**. Python 3.10 ou plus doit être installé
+   (https://www.python.org/downloads/windows/).
+4. La première installation des dépendances utilise Internet. Ensuite, laissez
+   la fenêtre du lanceur ouverte pendant l’utilisation de l’application.
 
-Les anciennes sélections et ressources enregistrées par thème sont récupérées comme
-**séances indépendantes** portant la mention « Séance récupérée ». Les anciens fichiers
-restent intacts. Vos thèmes, images et sons sont conservés.
+Les thèmes et les préparations des versions précédentes sont conservés. Les anciennes
+préparations par thème sont récupérées comme séances indépendantes, sans modifier leurs
+fichiers d’origine. Les nouvelles informations pédagogiques sont facultatives.
+
+## Retrouver et lancer une séance
+
+L’**Accueil** montre les séances directement sous leur séquence. Chaque ligne propose
+**Préparer · Jouer · Imprimer**. Cliquez sur **Jouer** pour démarrer immédiatement avec
+les cartes enregistrées, dans la dernière activité utilisée sur ce navigateur.
+Le bouton **Reprendre** retrouve la dernière séance utilisée.
+
+La recherche porte sur le nom de séance, la séquence et l’objectif. La recherche et
+la position dans la page sont conservées au retour, si le navigateur autorise son
+stockage local. L’application fonctionne aussi quand ce stockage est bloqué.
+
+Les quatre menus restent stables : **Accueil · Préparer · Jouer · Imprimer**.
+Depuis une séance, les trois derniers conservent cette séance. Sans séance ouverte,
+Jouer et Imprimer vous invitent à choisir une séance sur l’accueil.
+
+Les actions secondaires sont dans **⋯** : déroulé, duplication, déplacement et
+suppression. Supprimer demande une confirmation. Supprimer une séquence garde ses
+séances indépendantes, leurs cartes, leurs documents communs et leurs critères de
+réussite hérités. Aucun thème n’est supprimé et aucune corbeille n’est ajoutée à l’interface.
 
 ## Préparer une séquence
 
-Cliquez sur **Nouvelle séquence**. Renseignez le titre, le niveau, l’objectif commun,
-les notes et l’état : **À préparer · Prête · Réalisée**. Ajoutez si besoin des ressources
-communes, puis enregistrez. Vous retrouvez la séquence sur l’accueil.
+**Nouvelle séquence** ouvre une fiche : titre, niveau, projet final et objectif commun.
+Le bloc repliable des objectifs permet de renseigner :
 
-Depuis sa carte, **Ajouter une séance** crée une séance rattachée. Les flèches ↑ ↓
-permettent de réordonner les séances. Le numéro d’ordre est également modifiable
-sur la fiche de séance. **Modifier la séquence** permet de reprendre ses informations.
+- entrée culturelle ;
+- activités langagières ;
+- lexique, structures et phonologie ;
+- critères de réussite et notes personnelles.
 
-## Supprimer une séance ou une séquence
+Les documents communs sont accessibles dans les séances. Vous pouvez aussi joindre
+votre fiche de préparation existante en PDF ou par un lien.
 
-Sur l’accueil, le bouton **Supprimer** demande une confirmation avant toute action.
-Supprimer une séance retire uniquement cette séance.
-Supprimer une séquence conserve ses séances comme **séances indépendantes** ; les
-ressources communes sont reprises dans ces séances pour conserver leur utilisation.
-Les thèmes et les fichiers de ressources ne sont pas supprimés.
-Les anciennes préparations récupérées puis supprimées ne réapparaissent pas au redémarrage.
-Aucune corbeille ni commande de restauration n’est ajoutée à l’interface.
+Après l’enregistrement, retrouvez les séances sur la fiche de séquence. Les suggestions
+**Découvrir · Comprendre · S’entraîner · Réaliser le projet** préremplissent une nouvelle
+séance ; vous choisissez ses cartes et adaptez son déroulé. Elles n’imposent ni un
+nombre de séances ni une progression officielle. La place de l’écrit dépend du cycle.
 
-## Préparer une séance
+## Préparer une séance sur une seule page
 
-Une séance peut appartenir à une séquence ou rester indépendante pour un rituel ponctuel.
-Donnez-lui un nom, un objectif, une consigne, une durée indicative et un état.
+Cliquez sur le nom d’une séance ou sur **Préparer**. La fiche réunit :
 
-- Ajoutez un ou plusieurs thèmes et cochez les mots retenus (2 à 60 cartes au total).
-- **Choisir ce nombre** sélectionne des cartes à la préparation, pas au lancement.
-- Ajoutez les ressources de la séance et réordonnez-les avec les flèches.
-- Cliquez sur **Enregistrer la séance** : elle apparaît sur l’accueil.
-- **Dupliquer** crée une copie avec ses cartes et ses ressources, que vous pouvez adapter.
+1. nom, séquence, objectif du jour et phrase modèle ;
+2. consigne, durée, suivi, critères et notes dans un bloc repliable ;
+3. cartes des thèmes choisis, avec le compteur de sélection ;
+4. documents et liens, y compris ceux communs à la séquence ;
+5. étapes du déroulé, facultatives et réordonnables.
 
-Les images et les sons sont copiés dans un instantané propre à la séance.
-Modifier un thème ensuite ne change pas une séance déjà prête. Pour reprendre
-volontairement les nouvelles images et les nouveaux sons, cochez **Actualiser…**
-sur la fiche. Si une carte a été retirée du thème, l’éditeur l’indique et refuse
-une actualisation impossible ; l’ancienne séance demeure utilisable.
+Une séance utilise **2 à 60 cartes**, provenant d’un ou plusieurs thèmes. **Choisir ce
+nombre** effectue le tirage pendant la préparation. Les images et les sons sont
+copiés dans la séance : modifier un thème ne change pas une séance déjà préparée.
+La commande **Actualiser** reprend volontairement les modifications des thèmes.
 
-Une modification non enregistrée déclenche une confirmation avant de quitter la fiche.
+**Enregistrer** reste sur la fiche et confirme la sauvegarde. **Enregistrer et jouer**
+lance le jeu directement. Les modifications non enregistrées déclenchent une
+confirmation avant de quitter la page. Dupliquer copie les cartes et le déroulé.
 
-## Faire classe
+## Suivre le déroulé en classe
 
-Sur l’accueil, **Lancer** ouvre la séance : consigne, aperçu des cartes, sept activités,
-ressources communes de la séquence et ressources de la séance dans l’ordre choisi.
+Le raccourci **Déroulé** présente les étapes dans l’ordre : **Précédent · Suivant**.
+Chaque étape peut afficher une consigne pour une activité sans écran, ouvrir l’un des
+jeux ou présenter un document / lien. Le modèle **Rituel → Découverte → Entraînement →
+Bilan** est entièrement modifiable. Les durées sont indicatives : aucun minuteur
+ne fait passer automatiquement à l’étape suivante.
 
-Le jeu utilise exactement les cartes enregistrées. **Retour à ma séance** retrouve
-la fiche et son rituel ; celle-ci permet de retourner à la séquence ou à l’accueil.
-Les boutons **Préparer · Jouer · Imprimer** conservent le contexte de la séance.
+Le déroulé reprend à la dernière étape consultée sur ce navigateur. La phrase modèle
+et les critères de réussite restent accessibles. Les productions orales sont validées
+par l’enseignant ; l’application ne fait pas de reconnaissance vocale ni d’évaluation
+individuelle automatique.
 
-Dans les jeux, la barre d’activité est compacte et **Réglages** ouvre un panneau
-centré, contenu dans l’écran et défilant si nécessaire. Les réglages d’affichage,
-le contraste élevé, **Recommencer**, les commandes sonores et le plein écran restent
-accessibles. Le panneau se repositionne aussi lorsque la fenêtre est redimensionnée.
-En plein écran, **Menu** permet de retrouver la navigation principale.
+## Documents et liens
 
-## Chansons, vidéos, jeux et fiches de préparation
+Depuis l’accueil ou **Préparer → Documents et liens**, retrouvez les documents des
+thèmes, séquences, séances et étapes. Recherchez un titre ou une préparation, filtrez
+par type et par thème, puis ouvrez le document ou associez-le à une séance existante.
 
-Ajoutez des liens HTTP/HTTPS ou des fichiers MP3, MP4, WebM, OGG et PDF (64 Mo maximum).
-Donnez un titre et une catégorie à chaque ressource. Vous pouvez reprendre une ressource
-déjà associée à un thème, ou en ajouter une nouvelle. Les flèches définissent l’ordre.
-Les fichiers locaux ne démarrent pas automatiquement ; un changement de page arrête
-la lecture. Les liens Internet s’ouvrent dans un nouvel onglet à votre demande.
-Préférez MP3 et MP4 H.264/AAC pour la compatibilité entre navigateurs.
+Dans la préparation d’une séance, **Ajouter ou organiser les documents et liens**
+permet d’importer un fichier ou de saisir un lien HTTP/HTTPS. Types disponibles :
+chanson, vidéo, jeu en ligne, fiche de préparation, autre. Les fichiers acceptés sont
+MP3, MP4, WebM, OGG et PDF, jusqu’à 64 Mo. Les documents déjà ajoutés à un thème peuvent
+être repris. Le titre peut être renommé et l’ordre ajusté.
 
-## Imprimer
+Les liens externes s’ouvrent à votre demande dans un nouvel onglet. Ils ne sont pas
+mis en cache : Internet peut être nécessaire. Les fichiers importés sont conservés
+sur le PC. Aucun média ne démarre au chargement d’une page ; une seule lecture locale
+peut fonctionner à la fois. Les lectures s’arrêtent au changement de page ou d’étape.
 
-Depuis une séance, **Imprimer** reprend ses cartes enregistrées.
-Vous pouvez également accéder à **Mes thèmes**, puis imprimer un thème librement.
+## Jouer : onze activités
 
-- **Planche économique élèves** : six colonnes, de 1 à 40 séries. Trois séries de
-  18 cartes tiennent sur une A4 avec des marges hautes/basses de 5 mm. Pour les 17 fruits,
-  24 élèves donnent 8 feuilles. Les mots sont facultatifs.
-- **Grandes cartes collectives** : 2, 4, 6 ou 8 cartes par A4.
-- **Loto** : de 1 à 30 grilles, avec 4, 6 ou 9 cases ; deux grilles par A4.
-  La séance doit contenir au moins autant de cartes que de cases.
+Les sept activités d’origine restent disponibles : Visual Board, Listen, What’s
+Hidden?, Memory Match, Sequence, What’s Missing?, True or False.
 
-Choisissez **Préparer les pages**, puis **Imprimer / Enregistrer en PDF**.
-Réglages navigateur : A4 portrait, échelle 100 %, sans en-têtes ni pieds de page.
+Quatre activités complètent cette bêta :
 
-## Ajouter ou modifier des thèmes
+- **Bingo au TBI** : tirage sonore sans répétition, image masquée puis révélée,
+  historique et fin du tirage. Utilisez les grilles papier de la même séance.
+- **Défi oral** : nommer l’image ou réutiliser la phrase modèle. L’enseignant valide
+  et fait passer à la carte suivante ; le mot et le son peuvent être révélés.
+- **Sondage de classe** : compter les réponses en touchant les cartes, afficher les
+  barres et annuler la dernière réponse. Aucun nom d’élève n’est enregistré.
+- **Défi par équipes** : deux équipes alternent ; validation +1 ou passage sans point.
+  Une protection évite de compter deux réponses lors d’un double clic rapide.
 
-**Mes thèmes** ouvre l’éditeur des fruits, animaux et thèmes personnels.
-Ajoutez des images PNG/JPEG/WebP, vérifiez les mots puis générez les voix via gTTS,
-ou importez les MP3. La génération vocale utilise Internet et envoie les mots à
-Google Translate, sans compte ni clé. Chaque voix peut être réécoutée et régénérée.
-Les requêtes HTTPS conservent la vérification des certificats. En cas d’indisponibilité,
-vos cartes restent dans l’éditeur ; vous pouvez réessayer ou importer vos MP3.
+Scores, sondages et tirages sont temporaires et repartent à zéro après rechargement.
+Les nouvelles activités utilisent les cartes et sons de la séance enregistrée.
 
-À l’enregistrement, les images sont copiées en PNG **187 × 187**, sans déformation,
-dans `flashcards/nom-du-theme/`, les sons dans `audio/nom-du-theme/`, et `cards.js`
-est actualisé. Les originaux fournis et les anciennes archives sont sauvegardés
-sous `donnees_locales/originaux/` et `donnees_locales/avant_migration_187/`.
+La barre de jeu conserve le choix d’activité, le plein écran et le retour à la séance.
+Dans les activités d’origine, **Réglages** reste centré et défile si nécessaire.
+**Documents** ouvre un panneau sur place. Son ouverture interrompt les sons et
+minuteurs ; sa fermeture réinitialise la manche de l’activité d’origine afin de
+reprendre avec un état cohérent. Le lien vers le déroulé retrouve la bonne étape.
 
-L’export/import ZIP des thèmes reste disponible. Il transporte le vocabulaire,
-les images et les sons du thème ; il ne transporte pas une séquence ou ses séances.
+## Imprimer : neuf supports
 
-## Sauvegarder et transférer
+Les cartes de la séance sont reprises automatiquement. Choisissez le support, puis
+**Préparer les pages → Imprimer / Enregistrer en PDF**.
 
-Sauvegardez **donnees_locales en entier** : il contient les thèmes, les fichiers de
-ressources et les préparations. Les séquences et séances sont sous **progressions/**,
-avec leurs instantanés de cartes sous **progressions/snapshots/**.
+| Support | Présentation |
+| --- | --- |
+| Flashcards | Planche économique élèves ou 2, 4, 6, 8 grandes cartes par A4 |
+| Loto | 4, 6 ou 9 cases, deux grilles par page, jusqu’à 30 grilles |
+| Dominos image–mot | Une chaîne où chaque mot correspond à une autre image |
+| Cartes à plier | Image et mot côte à côte, à découper, plier et coller dos à dos |
+| Mini-livre | Couverture et petites pages numérotées, à découper et agrafer |
+| Fiche élève | Relier, entourer, numéroter sous la dictée ou écrire |
+| Cartes de manipulation | Petites cartes à découper pour trier et jouer |
+| Planche enseignant | Toutes les cartes sur une page, avec la phrase modèle |
+| Fiche de préparation | Objectifs, déroulé, cartes, documents et critères |
 
-Pour transférer votre travail, copiez ce dossier complet à côté de DEMARRER.bat dans
-une autre installation de cette version. N’assemblez pas deux dossiers de travail
-sans sauvegarde préalable : des fichiers de même nom peuvent correspondre au même objet.
-Le site déjà publié sur La Forge reste indépendant de cette version locale.
+La planche économique garde **3 séries de 18 cartes sur une A4** ; 24 séries des
+17 fruits font 8 pages. Les séances plus longues sont réparties en parties sans perdre
+de cartes. Les autres supports sont générés une fois : utilisez le nombre de copies
+de la fenêtre d’impression pour distribuer plusieurs exemplaires.
 
-## Validation et limites
+Réglages d’impression : **A4 portrait, échelle 100 %, sans en-têtes ni pieds de page**.
+Les cartes à plier utilisent une impression simple face ; pas de recto verso automatique.
+Pour entourer ou numéroter, l’enseignant choisit les mots à dicter. Le mini-livre est
+un ensemble de pages à découper, sans imposition pour pliage en livret.
 
-Vérifications sous Python 3.12 et Chromium sur Linux :
+## Thèmes, images et voix
 
-- 25 tests Python : thèmes et ZIP, séquences et séances, ordre, duplication,
-  plusieurs thèmes, persistance au redémarrage, reprise des anciennes préparations,
-  protection des instantanés après modification d’un thème et validation des données.
-- Parcours navigateur : création de séquence et de séance nommée, six cartes précises,
-  ressource de rituel, lancement, panneau Réglages à 1366 × 768 et 640 × 600,
-  retour à la séance, impression, duplication, réordonnancement et protection des saisies.
-- Suites existantes de l’éditeur, des médias, des flashcards/loto et du jeu libre.
+**Préparer → Thèmes et cartes** ouvre les deux thèmes fournis et les thèmes personnels.
+Images PNG/JPEG/WebP, redimensionnées à **187 × 187 pixels** sans déformation.
+Les sons sont générés avec gTTS ou importés en MP3. Les fichiers sont rangés dans
+`flashcards/nom-du-theme/` et `audio/nom-du-theme/`, puis `cards.js` est actualisé.
+Les originaux et archives précédentes restent conservés dans `donnees_locales`.
 
-Le lanceur Windows n’est pas exécuté nativement sur la machine Linux de préparation.
-Le TTS distant reste à vérifier sur votre PC : l’accès Google est refusé dans le cloud ;
-les tests déterministes simulent la réponse audio. Les médias fournis et les instantanés
-sont décodés dans le navigateur. Aucun exécutable `.exe` autonome n’est fourni.
+Le TTS nécessite Internet et envoie les mots à Google Translate, sans compte ni clé.
+Les certificats HTTPS restent vérifiés. Si le service est indisponible, les cartes
+sont conservées ; vous pouvez importer les MP3. L’export/import ZIP d’un thème contient
+ses cartes et ses voix, pas les séquences ou les documents associés.
 
-Pour les développeurs : installer `local/requirements.txt`, puis exécuter
+## Sauvegarder tout le travail
+
+Sur l’accueil, **Sauvegarder tout** télécharge un ZIP contenant `donnees_locales` :
+thèmes, fichiers, séquences, séances, instantanés et archives conservées. La date du
+dernier téléchargement est affichée sur ce navigateur. Les vidéos peuvent rendre
+la sauvegarde volumineuse.
+
+Pour restaurer ou transférer : fermez l’application, gardez une copie de l’installation
+actuelle, extrayez la sauvegarde, puis placez son dossier **donnees_locales** à côté de
+**DEMARRER.bat** dans une installation de cette version ou plus récente. **Ne fusionnez
+pas deux dossiers de données.** Le lancement reconstitue les fichiers des thèmes.
+La restauration passe par cette copie de dossier ; aucun import global automatique
+n’est proposé dans la bêta.
+
+## Vérifications et limites de la bêta
+
+Vérification sur Linux avec Python 3.12 et Chromium : tests Python des données,
+objectifs, étapes, suppression, compatibilité et restauration ; parcours navigateur
+des onze activités, de la navigation, des documents, des sons et des neuf supports
+PDF A4. Les deux thèmes fournis, leurs 30 images et leurs 30 MP3 sont chargés et
+décodés réellement. Les cas 54 cartes sur une A4 et 60 cartes par séance sont vérifiés.
+
+Le lanceur n’a pas été exécuté nativement sous Windows dans cet environnement.
+Le service TTS distant reste à essayer sur votre PC ; les tests déterministes utilisent
+une réponse audio simulée. Un essai sur l’imprimante et le TBI de la classe complétera
+les vérifications de cette bêta. Aucun exécutable `.exe` autonome n’est fourni.
+
+Développeurs : `python -m pip install -r local/requirements.txt`, puis
 `python -m unittest discover -s tests -p 'test_*.py'`.
-Les tests navigateur utilisent Playwright et Chromium ; certains utilisent aussi
-FFmpeg, pdfinfo et pdftotext. Ces outils ne sont pas requis pour faire classe.
-Utiliser des données de test fraîches pour chaque scénario qui crée ou renomme des objets.
+Les tests navigateur utilisent Playwright, Chromium et, pour certains, FFmpeg,
+pdfinfo et pdftotext. Ils utilisent des dossiers temporaires dédiés, jamais les
+préparations réelles de l’enseignant. Ces outils ne sont pas requis pour faire classe.
